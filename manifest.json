@@ -1,0 +1,21 @@
+{
+  "name": "Collecible - TCG Social & Market",
+  "short_name": "Collecible",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Circle-icons-camera.svg/192px-Circle-icons-camera.svg.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Circle-icons-camera.svg/512px-Circle-icons-camera.svg.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

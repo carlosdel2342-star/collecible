@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Circle-icons-camera.svg/192px-Circle-icons-camera.svg.png">
+
+    <title>Collecible</title>
+    <!-- Google Fonts for modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Contenedor Principal (Vistas) -->
+    <main id="app-content">
+        
+        <!-- Vista: Home -->
+        <div id="view-home" class="view active">
+            <header class="view-header">
+                <h1>Home</h1>
+            </header>
+            <div class="view-body transparent-body" id="feed-container">
+                <!-- Posts generados dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Vista: L4T (Looking 4 Trades) -->
+        <div id="view-l4t" class="view">
+            <header class="view-header">
+                <h1>L4T</h1>
+            </header>
+            <div class="view-body transparent-body">
+                <div class="l4t-grid" id="market-container">
+                    <!-- Tarjetas generadas dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista: Camera -->
+        <div id="view-camera" class="view">
+            <header class="view-header">
+                <h1>Scanner</h1>
+            </header>
+            <div class="view-body transparent-body camera-container">
+                <!-- UI Inicial -->
+                <div id="camera-initial" class="camera-center">
+                    <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
+                    <button id="btn-scan-trigger" class="btn-scan-main">
+                        <i class="fa-solid fa-camera"></i> Escanear Nueva Carta
+                    </button>
+                </div>
+                
+                <!-- Estado de Carga -->
+                <div id="camera-loading" class="camera-center" style="display: none;">
+                    <div class="scanner-spinner"></div>
+                    <p class="loading-text">Analizando legitimidad y metadatos con IA...</p>
+                </div>
+
+                <!-- Formulario de Revisión -->
+                <div id="camera-form" style="display: none;" class="review-form">
+                    <div class="thumb-container">
+                        <img id="scanned-thumb" src="" alt="Carta Escaneada">
+                    </div>
+                    
+                    <div class="input-container">
+                        <label>Nombre Detectado</label>
+                        <input type="text" id="scanned-name" placeholder="Ej. Invincible" class="form-input">
+                    </div>
+                    
+                    <div class="input-container">
+                        <label>Rareza / Edición</label>
+                        <input type="text" id="scanned-rarity" placeholder="Ej. Holográfica" class="form-input">
+                    </div>
+
+                    <div class="input-container">
+                        <label>Estado de Autenticidad (Verificado por IA)</label>
+                        <input type="text" id="scanned-auth" class="form-input auth-verified" readonly>
+                    </div>
+                    
+                    <div class="action-buttons-group">
+                        <button class="btn-action btn-save-profile" id="btn-save-profile">
+                            <i class="fa-solid fa-user"></i> Guardar en Profile
+                        </button>
+                        <button class="btn-action btn-save-home" id="btn-save-home">
+                            <i class="fa-solid fa-house"></i> Publicar en Home
+                        </button>
+                        <button class="btn-action btn-save-l4t" id="btn-save-l4t">
+                            <i class="fa-solid fa-handshake"></i> Vender en L4T
+                        </button>
+                    </div>
+                    
+                    <button id="btn-cancel-scan" class="btn-cancel">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista: Messages -->
+        <div id="view-messages" class="view">
+            <header class="view-header">
+                <h1>Messages</h1>
+            </header>
+            <div class="view-body transparent-body">
+                <div class="chat-list">
+                    <!-- Chat 1 (Unread) -->
+                    <div class="chat-item unread">
+                        <img src="https://i.pravatar.cc/150?img=12" alt="Avatar" class="chat-avatar">
+                        <div class="chat-details">
+                            <h4 class="chat-name">AlexCollector</h4>
+                            <p class="chat-preview">Me interesa tu carta foil...</p>
+                        </div>
+                        <div class="chat-meta">
+                            <span class="chat-time">12:30 PM</span>
+                            <span class="unread-badge"></span>
+                        </div>
+                    </div>
+
+                    <!-- Chat 2 (Unread) -->
+                    <div class="chat-item unread">
+                        <img src="https://i.pravatar.cc/150?img=47" alt="Avatar" class="chat-avatar">
+                        <div class="chat-details">
+                            <h4 class="chat-name">PokeTrader99</h4>
+                            <p class="chat-preview">¿Aceptarías $40 por la base?</p>
+                        </div>
+                        <div class="chat-meta">
+                            <span class="chat-time">10:15 AM</span>
+                            <span class="unread-badge"></span>
+                        </div>
+                    </div>
+
+                    <!-- Chat 3 -->
+                    <div class="chat-item">
+                        <img src="https://i.pravatar.cc/150?img=5" alt="Avatar" class="chat-avatar">
+                        <div class="chat-details">
+                            <h4 class="chat-name">TCG_Master</h4>
+                            <p class="chat-preview">Gracias por el intercambio bro 🤝</p>
+                        </div>
+                        <div class="chat-meta">
+                            <span class="chat-time">Ayer</span>
+                        </div>
+                    </div>
+
+                    <!-- Chat 4 -->
+                    <div class="chat-item">
+                        <img src="https://i.pravatar.cc/150?img=68" alt="Avatar" class="chat-avatar">
+                        <div class="chat-details">
+                            <h4 class="chat-name">SarahPlays</h4>
+                            <p class="chat-preview">Envío realizado, aquí tienes el track...</p>
+                        </div>
+                        <div class="chat-meta">
+                            <span class="chat-time">Mar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista: Profile -->
+        <div id="view-profile" class="view">
+            <header class="view-header" style="display: none;">
+                <h1>Profile</h1>
+            </header>
+            <div class="view-body transparent-body profile-container">
+                <!-- Cabecera de Perfil -->
+                <div class="profile-header">
+                    <div class="profile-banner"></div>
+                    <div class="profile-avatar-container">
+                        <img src="https://i.pravatar.cc/150?img=11" alt="Mi Avatar" class="profile-avatar">
+                    </div>
+                    <h2 class="profile-name">@CJMonii</h2>
+                    <p class="profile-bio">Coleccionista apasionado de TCG. Buscando rarezas de la primera edición y cartas holográficas.</p>
+                </div>
+
+                <!-- Estadísticas -->
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number" id="stat-cards">0</span>
+                        <span class="stat-label">Cartas</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number">1.2K</span>
+                        <span class="stat-label">Seguidores</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number" id="stat-value">$0</span>
+                        <span class="stat-label">Valor Est.</span>
+                    </div>
+                </div>
+
+                <!-- Galería de Cartas -->
+                <div class="profile-gallery" id="profile-gallery-container">
+                    <!-- Galería generada dinámicamente -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Barra de Navegación Inferior -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-target="view-home">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-btn" data-target="view-l4t">
+            <i class="fa-solid fa-handshake"></i>
+            <span>L4T</span>
+        </button>
+        <button class="nav-btn btn-camera" aria-label="Cámara" data-target="view-camera">
+            <div class="camera-icon-wrapper">
+                <i class="fa-solid fa-camera"></i>
+            </div>
+        </button>
+        <button class="nav-btn" data-target="view-messages">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span>Messages</span>
+        </button>
+        <button class="nav-btn" data-target="view-profile">
+            <i class="fa-solid fa-user"></i>
+            <span>Profile</span>
+        </button>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+
+    <!-- Registro de Service Worker para PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('ServiceWorker registrado exitosamente con scope:', registration.scope))
+                    .catch(err => console.log('Falló el registro del ServiceWorker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
