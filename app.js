@@ -22,8 +22,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (activeButton) activeButton.classList.add('active');
     }
 
+    // Función auxiliar para eventos táctiles (elimina ghost-clicks y retardos)
+    const handleTap = (element, callback) => {
+        if(!element) return;
+        const handler = (e) => {
+            // Prevenir doble ejecución si es touchstart (opcional, pero útil para botones puros)
+            if (e.type === 'touchstart') e.preventDefault();
+            callback(e);
+        };
+        element.addEventListener('click', handler);
+        element.addEventListener('touchstart', handler, { passive: false });
+    };
+
     navButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        handleTap(btn, () => {
             const targetViewId = btn.getAttribute('data-target');
             if (targetViewId) switchView(targetViewId);
         });
@@ -277,7 +289,7 @@ Analiza esta imagen y retorna OBLIGATORIAMENTE un JSON válido con la siguiente 
         currentBase64 = "";
     }
 
-    btnCancelScan.addEventListener('click', resetCamera);
+    handleTap(btnCancelScan, resetCamera);
 
     // --- ACCIONES DE FORMULARIO CON SUPABASE STORAGE Y DB ---
 
@@ -339,12 +351,12 @@ Analiza esta imagen y retorna OBLIGATORIAMENTE un JSON válido con la siguiente 
         }
     }
 
-    document.getElementById('btn-save-profile').addEventListener('click', async () => {
+    handleTap(document.getElementById('btn-save-profile'), async () => {
         await saveCardToCloud('profile');
         switchView('view-profile');
     });
 
-    document.getElementById('btn-save-home').addEventListener('click', async () => {
+    handleTap(document.getElementById('btn-save-home'), async () => {
         await saveCardToCloud('home', {
             username: "@CJMonii",
             avatar: "https://i.pravatar.cc/150?img=11"
@@ -352,7 +364,7 @@ Analiza esta imagen y retorna OBLIGATORIAMENTE un JSON válido con la siguiente 
         switchView('view-home');
     });
 
-    document.getElementById('btn-save-l4t').addEventListener('click', async () => {
+    handleTap(document.getElementById('btn-save-l4t'), async () => {
         let price = prompt("¿Qué precio estimado tiene esta carta ($)?", currentEstimatedPrice);
         if(price === null) return;
 

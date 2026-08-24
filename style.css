@@ -3,7 +3,15 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    padding: 0;
     -webkit-tap-highlight-color: transparent; /* Quita el recuadro azul al tocar en móviles */
+}
+
+/* Corrección de bloqueos táctiles globales */
+button, a, input, select, textarea, .nav-btn, .action-btn {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 :root {
@@ -37,6 +45,7 @@ body {
     height: calc(100% - 80px); /* Deja espacio para la nav bar */
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* IMPORTANTÍSIMO PARA IOS */
 }
 
 /* Views Management */
