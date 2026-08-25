@@ -59,13 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 bottomNav.style.display = 'none';
             }
         });
-    } else {
-        // Modo sin conexión local
-        viewAuth.style.display = 'none';
-        appContent.style.display = 'block';
-        bottomNav.style.display = 'flex';
     }
-
     if (btnLogin && btnSignup) {
         // Manejar Login
         handleTap(btnLogin, async (e) => {
@@ -149,10 +143,9 @@ document.addEventListener("DOMContentLoaded", () => {
             homeFeed = (data || []).filter(card => card.category === 'home');
             marketList = (data || []).filter(card => card.category === 'market');
             profileCollection = (data || []).filter(card => card.category === 'profile');
-
             renderAll();
         } catch (err) {
-            console.error("Modo Offline / Error de red:", err);
+            console.error("Error de red al cargar Supabase:", err);
         }
     }
 
@@ -359,17 +352,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 await supabase.from('cards').insert([newRecord]);
                 await loadData();
             } else {
-                // Modo simulado local si Supabase no responde
-                if(category === 'home') homeFeed.push(newRecord);
-                if(category === 'market') marketList.push(newRecord);
-                if(category === 'profile') profileCollection.push(newRecord);
-                renderAll();
+                throw new Error("Supabase no está inicializado.");
             }
 
             resetCamera();
         } catch (err) {
             console.error("Error al guardar:", err);
-            alert("Guardado correctamente en la sesión actual.");
+            alert("Hubo un error al subir la carta. Comprueba tu conexión.");
             resetCamera();
         }
     }
