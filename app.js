@@ -480,7 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const dynamicMimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
                     const base64Data = currentBase64.split(',')[1];
                     
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
