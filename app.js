@@ -2,12 +2,13 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     
-    // --- CREDENCIALES SUPABASE ---
-    const SUPABASE_URL = 'sb_publishable_6sIJpxdXdg93ntQXD29cnA_nigxf_Kn';
-    const SUPABASE_KEY = 'sb_secret_udO1YjJ4gbmHSywPWP_wSg_--OOwlb3';
+    // --- 🚨 TUS CREDENCIALES REALES AQUÍ 🚨 ---
+    // Búscalas en Supabase: Settings (Rueda de engranaje) -> API
+    const SUPABASE_URL = 'https://fgqyicidzwmwbnutlmnz.supabase.co'; // Debe empezar con https://
+    const SUPABASE_KEY = 'sb_publishable_6sIJpxdXdg93ntQXD29cnA_nigxf_Kn'; // Es un texto larguísimo que empieza con eyJ...
     
     let supabase = null;
-    let currentUser = null; // Guardará la sesión activa
+    let currentUser = null; 
 
     try {
         if (window.supabase) {
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Error al inicializar Supabase:", e);
     }
 
-    // --- FASE 11: LÓGICA DE AUTENTICACIÓN ---
+    // --- LÓGICA DE AUTENTICACIÓN ---
     const viewAuth = document.getElementById('view-auth');
     const appContent = document.getElementById('app-content');
     const bottomNav = document.getElementById('bottom-nav');
@@ -41,37 +42,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnLogout = document.getElementById('btn-logout');
 
     if (supabase) {
-        // Verificación Inicial Estricta
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 currentUser = session.user;
-                viewAuth.style.display = 'none';
-                appContent.style.display = 'block';
-                bottomNav.style.display = 'flex';
+                if(viewAuth) viewAuth.style.display = 'none';
+                if(appContent) appContent.style.display = 'block';
+                if(bottomNav) bottomNav.style.display = 'flex';
                 loadData();
             } else {
                 currentUser = null;
-                viewAuth.style.display = 'flex';
-                appContent.style.display = 'none';
-                bottomNav.style.display = 'none';
+                if(viewAuth) viewAuth.style.display = 'flex';
+                if(appContent) appContent.style.display = 'none';
+                if(bottomNav) bottomNav.style.display = 'none';
             }
         });
 
-        // Observador de estado de sesión para cambios futuros
         supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 currentUser = session.user;
-                viewAuth.style.display = 'none';
-                appContent.style.display = 'block';
-                bottomNav.style.display = 'flex';
-                loadData(); // Cargar datos solo cuando esté logueado
+                if(viewAuth) viewAuth.style.display = 'none';
+                if(appContent) appContent.style.display = 'block';
+                if(bottomNav) bottomNav.style.display = 'flex';
+                loadData(); 
             } else {
                 currentUser = null;
-                viewAuth.style.display = 'flex';
-                appContent.style.display = 'none';
-                bottomNav.style.display = 'none';
+                if(viewAuth) viewAuth.style.display = 'flex';
+                if(appContent) appContent.style.display = 'none';
+                if(bottomNav) bottomNav.style.display = 'none';
                 
-                // Reiniciar a la vista de login si se cierra sesión
                 if(authLogin && authRegister && authSuccess) {
                     authLogin.style.display = 'block';
                     authRegister.style.display = 'none';
@@ -129,9 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: registerEmail.value,
                 password: registerPassword.value,
                 options: {
-                    data: {
-                        display_name: registerName.value
-                    }
+                    data: { display_name: registerName.value }
                 }
             });
             if (error) {
@@ -164,7 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (activeButton) activeButton.classList.add('active');
     }
 
-    // Función auxiliar para eventos táctiles ultra fluidos
     function handleTap(element, callback) {
         if(!element) return;
         const handler = (e) => {
@@ -312,8 +307,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentBase64 = "";
     let currentEstimatedPrice = "50"; 
 
-    // Llave protegida (si no hay llave propia, usa un mock inteligente para que no falle nunca)
-    const GEMINI_API_KEY = 'AQ.Ab8RN6Lb0bdZsydMaS3j8zkWxyfWDDFBvyPyHn9X8ngWIJHepw';
+    // 🚨 PON TU CLAVE DE GEMINI AQUÍ ABAJO 🚨
+    const GEMINI_API_KEY = 'TU_CLAVE_GEMINI_AQUI';
 
     if (btnScanTrigger && ocrUpload) {
         btnScanTrigger.addEventListener('click', () => {
@@ -334,7 +329,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentBase64 = event.target.result;
                 if(scannedThumb) scannedThumb.src = currentBase64;
 
-                // Función simulada/segura si no hay API Key configurada
                 setTimeout(() => {
                     if(scannedName) scannedName.value = "Carta Coleccionable TCG";
                     if(scannedRarity) scannedRarity.value = "Holográfica / Foil";
@@ -386,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const loadingText = document.querySelector('#camera-loading .loading-text');
             if(loadingText) loadingText.innerText = "Subiendo carta a la nube...";
 
-            let publicUrl = currentBase64; // Fallback local si falla el bucket
+            let publicUrl = currentBase64; 
             try {
                 publicUrl = await uploadImageToSupabase(currentBase64);
             } catch (err) {
@@ -440,7 +434,6 @@ document.addEventListener("DOMContentLoaded", () => {
         switchView('view-l4t');
     });
 
-    // --- DELEGACIÓN DE EVENTOS PARA BOTONES DINÁMICOS ---
     const feedContainer = document.getElementById('feed-container');
     if(feedContainer) {
         handleTap(feedContainer, (e) => {
@@ -456,6 +449,4 @@ document.addEventListener("DOMContentLoaded", () => {
             if(btn) alert("¡Oferta enviada al vendedor!");
         });
     }
-
-    // Inicializar datos manejado por onAuthStateChange
 });
