@@ -28,7 +28,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnLogout = document.getElementById('btn-logout');
 
     if (supabase) {
-        // Observador de estado de sesión
+        // Verificación Inicial Estricta
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                currentUser = session.user;
+                viewAuth.style.display = 'none';
+                appContent.style.display = 'block';
+                bottomNav.style.display = 'flex';
+                loadData();
+            } else {
+                currentUser = null;
+                viewAuth.style.display = 'flex';
+                appContent.style.display = 'none';
+                bottomNav.style.display = 'none';
+            }
+        });
+
+        // Observador de estado de sesión para cambios futuros
         supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 currentUser = session.user;
