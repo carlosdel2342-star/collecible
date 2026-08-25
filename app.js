@@ -472,7 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const reader = new FileReader();
             reader.onload = async function(event) {
-                currentBase64 = event.target.result;
+                currentBase64 = await resizeImage(event.target.result, 800);
                 if(scannedThumb) scannedThumb.src = currentBase64;
 
                 try {
@@ -843,9 +843,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- EDICIÓN DINÁMICA DE AVATAR EN PERFIL ---
     const btnEditAvatar = document.getElementById('btn-edit-avatar');
     const profileAvatarUpload = document.getElementById('profile-avatar-upload');
-
-    if (btnEditAvatar && profileAvatarUpload) {
-        handleTap(btnEditAvatar, () => {
+    
+    if(btnEditAvatar && profileAvatarUpload) {
+        btnEditAvatar.addEventListener('click', () => {
             profileAvatarUpload.click();
         });
 
