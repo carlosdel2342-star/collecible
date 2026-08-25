@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btnOnboardingSubmit.innerText = "Preparando perfil...";
             btnOnboardingSubmit.disabled = true;
 
-            let finalAvatarUrl = "https://i.pravatar.cc/150?img=11";
+            let finalAvatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(onboardingUsername.value)}&backgroundColor=000000,1a1a1a&textColor=ffffff`;
             
             if (onboardingBase64) {
                 try {
@@ -390,7 +390,6 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = '';
         
         let totalValue = 0;
-        
         profileCollection.slice().reverse().forEach(card => {
             container.innerHTML += `
                 <div class="gallery-item"><img src="${card.image}" alt="${card.name || 'Carta'}"></div>
@@ -402,6 +401,42 @@ document.addEventListener("DOMContentLoaded", () => {
         const statValue = document.getElementById('stat-value');
         if(statCards) statCards.innerText = profileCollection.length;
         if(statValue) statValue.innerText = `$${totalValue}`;
+
+        // Render "Mis Posts"
+        const postsContainer = document.getElementById('profile-posts-container');
+        if(postsContainer && currentUser && currentUser.user_metadata) {
+            postsContainer.innerHTML = '';
+            const myUsername = currentUser.user_metadata.username || currentUser.email;
+            const myPosts = homeFeed.filter(post => post.username === `@${myUsername}` || post.username === myUsername);
+            
+            if(myPosts.length === 0) {
+                postsContainer.innerHTML = '<p class="placeholder-text" style="text-align:center; margin-top:50px;">Aún no has publicado nada.</p>';
+            } else {
+                myPosts.slice().reverse().forEach(post => {
+                    const hasImage = post.image && post.image.trim() !== "";
+                    postsContainer.innerHTML += `
+                        <div class="card">
+                            <div class="card-header">
+                                <img src="${post.avatar || 'https://i.pravatar.cc/150?img=11'}" alt="User Avatar" class="user-avatar">
+                                <div class="user-info">
+                                    <h3>${post.username || '@Usuario'}</h3>
+                                    <p>Hace un momento</p>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p style="margin-bottom: ${hasImage ? '10px' : '0'};">${post.summary || ''}</p>
+                                ${hasImage ? `<img src="${post.image}" alt="Post Image">` : ''}
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-icon"><i class="fa-regular fa-heart"></i></button>
+                                <button class="btn-icon"><i class="fa-regular fa-comment"></i></button>
+                                <button class="btn-icon"><i class="fa-solid fa-share-nodes"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
     }
 
     // --- CÁMARA E INTELIGENCIA ARTIFICIAL SEGURA ---
@@ -632,6 +667,161 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Hubo un error al subir la carta. Comprueba tu conexión.");
             if(!keepChatOpen) resetCamera();
         }
+    }
+
+    // --- TABS DEL PERFIL ---
+    const tabPortfolio = document.getElementById('tab-portfolio');
+    const tabPosts = document.getElementById('tab-posts');
+    const containerPortfolio = document.getElementById('profile-gallery-container');
+    const containerPosts = document.getElementById('profile-posts-container');
+
+    if(tabPortfolio && tabPosts) {
+        handleTap(tabPortfolio, () => {
+            tabPortfolio.classList.add('active');
+            tabPosts.classList.remove('active');
+            containerPortfolio.style.display = 'grid';
+            containerPosts.style.display = 'none';
+        });
+        handleTap(tabPosts, () => {
+            tabPosts.classList.add('active');
+            tabPortfolio.classList.remove('active');
+            containerPortfolio.style.display = 'none';
+            containerPosts.style.display = 'block';
+        });
+    }
+
+    // --- LÓGICA DE PUBLICACIÓN MANUAL (MODALES) ---
+    const btnFabPost = document.getElementById('btn-fab-post');
+    const modalNewPost = document.getElementById('modal-new-post');
+    const btnClosePostModal = document.getElementById('btn-close-post-modal');
+    const btnSubmitPost = document.getElementById('btn-submit-post');
+    const modalPostImage = document.getElementById('modal-post-image');
+    const modalPostPreview = document.getElementById('modal-post-preview');
+
+    let postImageBase64 = "";
+
+    if(btnFabPost) handleTap(btnFabPost, () => modalNewPost.style.display = 'flex');
+    if(btnClosePostModal) handleTap(btnClosePostModal, () => modalNewPost.style.display = 'none');
+
+    if(modalPostImage) {
+        modalPostImage.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                postImageBase64 = event.target.result;
+                modalPostPreview.src = postImageBase64;
+                modalPostPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if(btnSubmitPost) {
+        handleTap(btnSubmitPost, async () => {
+            const text = document.getElementById('modal-post-text').value;
+            if(!text && !postImageBase64) return alert("Escribe un texto o sube una imagen.");
+            
+            btnSubmitPost.innerText = "Publicando...";
+            btnSubmitPost.disabled = true;
+
+            let finalImgUrl = "";
+            if(postImageBase64) {
+                const resized = await resizeImage(postImageBase64, 800);
+                try { finalImgUrl = await uploadImageToSupabase(resized); } 
+                catch(e) { finalImgUrl = resized; }
+            }
+
+            let username = "@Anonymous";
+            let avatar = "https://i.pravatar.cc/150?img=11";
+            if(currentUser && currentUser.user_metadata) {
+                username = currentUser.user_metadata.username ? `@${currentUser.user_metadata.username}` : currentUser.email;
+                if(currentUser.user_metadata.avatar_url) avatar = currentUser.user_metadata.avatar_url;
+            }
+
+            try {
+                await supabase.from('cards').insert([{
+                    category: 'home',
+                    name: 'Post',
+                    rarity: 'Normal',
+                    summary: text,
+                    image: finalImgUrl,
+                    username: username,
+                    avatar: avatar
+                }]);
+                await loadData();
+                modalNewPost.style.display = 'none';
+                document.getElementById('modal-post-text').value = "";
+                postImageBase64 = "";
+                modalPostPreview.style.display = 'none';
+            } catch(e) {
+                alert("Error al publicar.");
+            } finally {
+                btnSubmitPost.innerText = "Publicar";
+                btnSubmitPost.disabled = false;
+            }
+        });
+    }
+
+    const btnFabTrade = document.getElementById('btn-fab-trade');
+    const modalNewTrade = document.getElementById('modal-new-trade');
+    const btnCloseTradeModal = document.getElementById('btn-close-trade-modal');
+    const btnSubmitTrade = document.getElementById('btn-submit-trade');
+    const modalTradeImage = document.getElementById('modal-trade-image');
+    const modalTradePreview = document.getElementById('modal-trade-preview');
+
+    let tradeImageBase64 = "";
+
+    if(btnFabTrade) handleTap(btnFabTrade, () => modalNewTrade.style.display = 'flex');
+    if(btnCloseTradeModal) handleTap(btnCloseTradeModal, () => modalNewTrade.style.display = 'none');
+
+    if(modalTradeImage) {
+        modalTradeImage.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                tradeImageBase64 = event.target.result;
+                modalTradePreview.src = tradeImageBase64;
+                modalTradePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if(btnSubmitTrade) {
+        handleTap(btnSubmitTrade, async () => {
+            const name = document.getElementById('modal-trade-name').value;
+            const price = document.getElementById('modal-trade-price').value;
+            
+            if(!name || !price || !tradeImageBase64) return alert("Nombre, precio y foto son requeridos.");
+            
+            btnSubmitTrade.innerText = "Publicando...";
+            btnSubmitTrade.disabled = true;
+
+            let finalImgUrl = "";
+            const resized = await resizeImage(tradeImageBase64, 800);
+            try { finalImgUrl = await uploadImageToSupabase(resized); } 
+            catch(e) { finalImgUrl = resized; }
+
+            try {
+                await supabase.from('cards').insert([{
+                    category: 'market',
+                    name: name,
+                    rarity: document.getElementById('modal-trade-rarity').value || 'Normal',
+                    summary: document.getElementById('modal-trade-condition').value || '',
+                    image: finalImgUrl,
+                    price: price
+                }]);
+                await loadData();
+                modalNewTrade.style.display = 'none';
+            } catch(e) {
+                alert("Error al publicar.");
+            } finally {
+                btnSubmitTrade.innerText = "Publicar Anuncio";
+                btnSubmitTrade.disabled = false;
+            }
+        });
     }
 
     const feedContainer = document.getElementById('feed-container');
