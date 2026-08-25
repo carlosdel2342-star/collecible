@@ -139,10 +139,17 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (onboardingBase64) {
                 try {
-                    btnOnboardingSubmit.innerText = "Subiendo foto...";
-                    finalAvatarUrl = await uploadImageToSupabase(onboardingBase64);
+                    btnOnboardingSubmit.innerText = "Optimizando foto...";
+                    const resizedBase64 = await resizeImage(onboardingBase64, 200);
+                    finalAvatarUrl = resizedBase64; // fallback
+                    try {
+                        btnOnboardingSubmit.innerText = "Subiendo foto...";
+                        finalAvatarUrl = await uploadImageToSupabase(resizedBase64);
+                    } catch (err) {
+                        console.warn("Fallo al subir avatar al bucket, usando base64 directo.", err);
+                    }
                 } catch (err) {
-                    console.warn("Fallo al subir avatar a Supabase, usando default.", err);
+                    console.warn("Fallo general al procesar avatar.", err);
                 }
             }
 
@@ -480,6 +487,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleTap(btnCancelScan, resetCamera);
 
+    function resizeImage(base64Str, maxWidth = 200) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = base64Str;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ratio = maxWidth / img.width;
+                canvas.width = maxWidth;
+                canvas.height = img.height * ratio;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.onerror = () => resolve(base64Str);
+        });
+    }
+
     async function uploadImageToSupabase(base64Str) {
         if (!supabase) throw new Error("Supabase no disponible");
         const res = await fetch(base64Str);
@@ -597,14 +621,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const reader = new FileReader();
             reader.onload = async function(event) {
                 const base64Data = event.target.result;
+                const resizedBase64 = await resizeImage(base64Data, 200);
+                
                 const profileAvatarImg = document.getElementById('profile-avatar-img');
                 if(profileAvatarImg) {
-                    profileAvatarImg.src = base64Data;
+                    profileAvatarImg.src = resizedBase64;
                     profileAvatarImg.style.opacity = '0.5';
                 }
 
                 try {
-                    const finalAvatarUrl = await uploadImageToSupabase(base64Data);
+                    let finalAvatarUrl = resizedBase64;
+                    try {
+                        finalAvatarUrl = await uploadImageToSupabase(resizedBase64);
+                    } catch (uploadErr) {
+                        console.warn("Fallo al subir al bucket, usando base64 directo:", uploadErr);
+                    }
                     
                     const { data, error } = await supabase.auth.updateUser({
                         data: {
