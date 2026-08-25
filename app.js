@@ -7,12 +7,83 @@ document.addEventListener("DOMContentLoaded", () => {
     const SUPABASE_KEY = 'sb_secret_udO1YjJ4gbmHSywPWP_wSg_--OOwlb3';
     
     let supabase = null;
+    let currentUser = null; // Guardará la sesión activa
+
     try {
         if (window.supabase) {
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         }
     } catch (e) {
         console.error("Error al inicializar Supabase:", e);
+    }
+
+    // --- FASE 11: LÓGICA DE AUTENTICACIÓN ---
+    const viewAuth = document.getElementById('view-auth');
+    const appContent = document.getElementById('app-content');
+    const bottomNav = document.getElementById('bottom-nav');
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const btnLogin = document.getElementById('btn-login');
+    const btnSignup = document.getElementById('btn-signup');
+    const btnLogout = document.getElementById('btn-logout');
+
+    if (supabase) {
+        // Observador de estado de sesión
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                currentUser = session.user;
+                viewAuth.style.display = 'none';
+                appContent.style.display = 'block';
+                bottomNav.style.display = 'flex';
+                loadData(); // Cargar datos solo cuando esté logueado
+            } else {
+                currentUser = null;
+                viewAuth.style.display = 'flex';
+                appContent.style.display = 'none';
+                bottomNav.style.display = 'none';
+            }
+        });
+    } else {
+        // Modo sin conexión local
+        viewAuth.style.display = 'none';
+        appContent.style.display = 'block';
+        bottomNav.style.display = 'flex';
+    }
+
+    if (btnLogin && btnSignup) {
+        // Manejar Login
+        handleTap(btnLogin, async (e) => {
+            e.preventDefault();
+            if (!authEmail.value || !authPassword.value) return alert("Por favor, llena los campos.");
+            
+            const { error } = await supabase.auth.signInWithPassword({
+                email: authEmail.value,
+                password: authPassword.value,
+            });
+            if (error) alert("Error al iniciar sesión: " + error.message);
+        });
+
+        // Manejar Registro
+        handleTap(btnSignup, async (e) => {
+            e.preventDefault();
+            if (!authEmail.value || !authPassword.value) return alert("Por favor, llena los campos.");
+            
+            const { data, error } = await supabase.auth.signUp({
+                email: authEmail.value,
+                password: authPassword.value,
+            });
+            if (error) {
+                alert("Error al registrar: " + error.message);
+            } else {
+                alert("Cuenta creada. Por favor, revisa tu bandeja de entrada para confirmar tu correo electrónico antes de iniciar sesión.");
+            }
+        });
+    }
+
+    if (btnLogout) {
+        handleTap(btnLogout, async () => {
+            if (supabase) await supabase.auth.signOut();
+        });
     }
 
     // --- NAVEGACIÓN ---
@@ -293,8 +364,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     handleTap(document.getElementById('btn-save-home'), async () => {
+        const username = currentUser ? currentUser.email : "@Anonymous";
         await saveCardToCloud('home', {
-            username: "@CJMonii",
+            username: username,
             avatar: "https://i.pravatar.cc/150?img=11"
         });
         switchView('view-home');
@@ -327,6 +399,5 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Inicializar datos
-    loadData();
+    // Inicializar datos manejado por onAuthStateChange
 });

@@ -17,9 +17,39 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Vista: Auth (Login/Registro) -->
+    <div id="view-auth" class="auth-container active">
+        <div class="auth-header">
+            <div class="auth-logo-wrapper">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h1>Collecible</h1>
+            <p>El portal definitivo para tus TCG</p>
+        </div>
+        
+        <form id="auth-form" class="auth-form">
+            <div class="input-container">
+                <label>Correo Electrónico</label>
+                <input type="email" id="auth-email" placeholder="ejemplo@correo.com" class="form-input" required>
+            </div>
+            <div class="input-container">
+                <label>Contraseña</label>
+                <input type="password" id="auth-password" placeholder="••••••••" class="form-input" required>
+            </div>
+            
+            <div class="action-buttons-group">
+                <button type="submit" id="btn-login" class="btn-action btn-auth-primary">
+                    Iniciar Sesión
+                </button>
+                <button type="button" id="btn-signup" class="btn-action btn-auth-secondary">
+                    Crear Cuenta
+                </button>
+            </div>
+        </form>
+    </div>
 
     <!-- Contenedor Principal (Vistas) -->
-    <main id="app-content">
+    <main id="app-content" style="display: none;">
         
         <!-- Vista: Home -->
         <div id="view-home" class="view active">
@@ -199,13 +229,20 @@
                 <div class="profile-gallery" id="profile-gallery-container">
                     <!-- Galería generada dinámicamente -->
                 </div>
+
+                <!-- Cerrar Sesión -->
+                <div style="margin-top: 30px; text-align: center; padding-bottom: 30px;">
+                    <button id="btn-logout" class="btn-cancel" style="color: #ff4757; font-weight: 800;">
+                        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                    </button>
+                </div>
             </div>
         </div>
 
     </main>
 
     <!-- Barra de Navegación Inferior -->
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottom-nav" style="display: none;">
         <button class="nav-btn active" data-target="view-home">
             <i class="fa-solid fa-house"></i>
             <span>Home</span>

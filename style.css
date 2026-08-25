@@ -71,6 +71,75 @@ body {
     will-change: transform, opacity; /* Aceleración HW */
 }
 
+/* --- FASE 11: ESTILOS DE AUTENTICACIÓN (LOGIN/REGISTRO) --- */
+
+.auth-container {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    padding: 30px;
+    background: var(--bg-color);
+    z-index: 2000;
+}
+
+.auth-container.active {
+    display: flex;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.auth-logo-wrapper {
+    width: 80px;
+    height: 80px;
+    background: var(--accent-gradient);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 10px 25px rgba(0, 210, 255, 0.3);
+}
+
+.auth-logo-wrapper i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.auth-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+    letter-spacing: -1px;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 350px;
+}
+
+.btn-auth-primary {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 210, 255, 0.3);
+}
+
+.btn-auth-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .view.active {
     display: block; /* Muestra solo la vista activa */
 }
