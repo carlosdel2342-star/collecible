@@ -394,19 +394,27 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await response.json();
                     
                     let jsonText = data.candidates[0].content.parts[0].text;
-                    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const aiData = JSON.parse(jsonText);
+                    console.log("Respuesta cruda de Gemini:", jsonText);
+                    
+                    jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    
+                    let aiData = {};
+                    try {
+                        aiData = JSON.parse(jsonText);
+                    } catch(e) {
+                        console.warn("Fallo al parsear JSON, usando valores por defecto. Error:", e);
+                    }
 
-                    if(scannedName) scannedName.value = aiData.nombre || "Carta Coleccionable TCG";
-                    if(scannedRarity) scannedRarity.value = aiData.rareza || "Desconocida";
+                    if(scannedName) scannedName.value = aiData.nombre || "Desconocido";
+                    if(scannedRarity) scannedRarity.value = aiData.rareza || "Normal";
                     
                     const scannedAuth = document.getElementById('scanned-auth');
-                    if(scannedAuth) scannedAuth.value = aiData.autenticidad || "Verificación pendiente";
+                    if(scannedAuth) scannedAuth.value = aiData.autenticidad || "Sin verificar";
                     
                     const scannedSummary = document.getElementById('scanned-summary');
-                    if(scannedSummary) scannedSummary.value = aiData.resumen || "";
+                    if(scannedSummary) scannedSummary.value = aiData.resumen || "Sin resumen disponible.";
 
-                    currentEstimatedPrice = aiData.precioEstimado || "45";
+                    currentEstimatedPrice = aiData.precioEstimado || "0";
 
                     if(cameraLoading) cameraLoading.style.display = 'none';
                     if(cameraForm) cameraForm.style.display = 'block';
