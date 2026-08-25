@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Función auxiliar para eventos táctiles ultra fluidos
-    const handleTap = (element, callback) => {
+    function handleTap(element, callback) {
         if(!element) return;
         const handler = (e) => {
             if (e.type === 'touchstart') e.preventDefault();
@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         element.addEventListener('click', handler);
         element.addEventListener('touchstart', handler, { passive: false });
-    };
+    }
 
     navButtons.forEach(btn => {
         handleTap(btn, () => {
