@@ -251,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentEstimatedPrice = "50"; 
 
     // Llave protegida (si no hay llave propia, usa un mock inteligente para que no falle nunca)
-    const GEMINI_API_KEY = '';
+    const GEMINI_API_KEY = 'AQ.Ab8RN6Lb0bdZsydMaS3j8zkWxyfWDDFBvyPyHn9X8ngWIJHepw';
 
     if (btnScanTrigger && ocrUpload) {
         btnScanTrigger.addEventListener('click', () => {
