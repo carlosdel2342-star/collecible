@@ -170,45 +170,24 @@
                     <p class="loading-text">Analizando legitimidad y metadatos con IA...</p>
                 </div>
 
-                <!-- Formulario de Revisión -->
-                <div id="camera-form" style="display: none;" class="review-form">
-                    <div class="thumb-container">
+                <!-- Formulario de Revisión (Chat UI) -->
+                <div id="camera-form" style="display: none;" class="chat-ui-container">
+                    <div class="chat-header-img">
                         <img id="scanned-thumb" src="" alt="Carta Escaneada">
                     </div>
                     
-                    <div class="input-container">
-                        <label>Nombre Detectado</label>
-                        <input type="text" id="scanned-name" placeholder="Ej. Invincible" class="form-input">
-                    </div>
-                    
-                    <div class="input-container">
-                        <label>Rareza / Edición</label>
-                        <input type="text" id="scanned-rarity" placeholder="Ej. Holográfica" class="form-input">
+                    <div class="chat-messages" id="chat-messages-container">
+                        <!-- Mensajes inyectados dinámicamente -->
                     </div>
 
-                    <div class="input-container">
-                        <label>Estado de Autenticidad (Verificado por IA)</label>
-                        <input type="text" id="scanned-auth" class="form-input auth-verified" readonly>
-                    </div>
-
-                    <div class="input-container">
-                        <label>Resumen de la Carta</label>
-                        <textarea id="scanned-summary" class="form-input" style="resize: vertical; min-height: 60px;" readonly></textarea>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input-text" placeholder="El Asistente está procesando..." class="chat-input" disabled>
+                        <button id="btn-chat-send" class="btn-chat-send" disabled><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
                     
-                    <div class="action-buttons-group">
-                        <button class="btn-action btn-save-profile" id="btn-save-profile">
-                            <i class="fa-solid fa-user"></i> Guardar en Profile
-                        </button>
-                        <button class="btn-action btn-save-home" id="btn-save-home">
-                            <i class="fa-solid fa-house"></i> Publicar en Home
-                        </button>
-                        <button class="btn-action btn-save-l4t" id="btn-save-l4t">
-                            <i class="fa-solid fa-handshake"></i> Vender en L4T
-                        </button>
+                    <div style="text-align: center; margin: 10px;">
+                        <button id="btn-cancel-scan" class="btn-cancel">Descartar y Volver</button>
                     </div>
-                    
-                    <button id="btn-cancel-scan" class="btn-cancel">Cancelar</button>
                 </div>
             </div>
         </div>

@@ -131,6 +131,19 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             if (!onboardingUsername.value) return alert("El Username es obligatorio.");
             
+            try {
+                const { data: existingUsers, error: queryError } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('username', onboardingUsername.value);
+                
+                if (existingUsers && existingUsers.length > 0) {
+                    return alert("Este nombre de usuario ya está en uso, elige otro.");
+                }
+            } catch (profileErr) {
+                console.warn("Aviso: Validación de unicidad de username omitida (tabla profiles no encontrada).");
+            }
+            
             const originalText = btnOnboardingSubmit.innerText;
             btnOnboardingSubmit.innerText = "Preparando perfil...";
             btnOnboardingSubmit.disabled = true;
@@ -197,6 +210,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 return alert("Las contraseñas no coinciden.");
             }
             
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+            if (!passwordRegex.test(registerPassword.value)) {
+                return alert("La contraseña debe tener al menos 8 caracteres, incluir letras y números.");
+            }
+            
             const { error } = await supabase.auth.signUp({
                 email: registerEmail.value,
                 password: registerPassword.value,
@@ -205,7 +223,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             if (error) {
-                alert(error.message);
+                if (error.message.includes("already registered") || error.message.includes("already exists")) {
+                    alert("Este correo electrónico ya está registrado. Por favor, inicia sesión.");
+                } else {
+                    alert("Error en el registro: " + error.message);
+                }
             } else {
                 authRegister.style.display = 'none';
                 authSuccess.style.display = 'block';
@@ -448,19 +470,78 @@ document.addEventListener("DOMContentLoaded", () => {
                         console.warn("Fallo al parsear JSON, usando valores por defecto. Error:", e);
                     }
 
-                    if(scannedName) scannedName.value = aiData.nombre || "Desconocido";
-                    if(scannedRarity) scannedRarity.value = aiData.rareza || "Normal";
+                    // --- NEW CHAT LOGIC ---
+                    const chatMessagesContainer = document.getElementById('chat-messages-container');
                     
-                    const scannedAuth = document.getElementById('scanned-auth');
-                    if(scannedAuth) scannedAuth.value = aiData.autenticidad || "Sin verificar";
-                    
-                    const scannedSummary = document.getElementById('scanned-summary');
-                    if(scannedSummary) scannedSummary.value = aiData.resumen || "Sin resumen disponible.";
+                    if(chatMessagesContainer) {
+                        chatMessagesContainer.innerHTML = `
+                            <div class="message-bot">
+                                <h3>Análisis Completado 🤖</h3>
+                                <p><strong>Nombre:</strong> ${aiData.nombre || 'Desconocido'}</p>
+                                <p><strong>Rareza:</strong> ${aiData.rareza || 'Normal'}</p>
+                                <p><strong>Autenticidad:</strong> ${aiData.autenticidad || 'Sin verificar'}</p>
+                                <p><strong>Precio Estimado:</strong> $${aiData.precioEstimado || '0'}</p>
+                                <p><em>${aiData.resumen || 'Sin resumen disponible.'}</em></p>
+                                <div class="chat-actions">
+                                    <button class="btn-chat-action" id="chat-btn-save">➕ Guardar en mi Portafolio</button>
+                                    <button class="btn-chat-action" id="chat-btn-sell">🏷️ Publicar en L4T (Mercado)</button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        setTimeout(() => {
+                            const btnSave = document.getElementById('chat-btn-save');
+                            const btnSell = document.getElementById('chat-btn-sell');
+                            
+                            function addBotReply(text) {
+                                chatMessagesContainer.innerHTML += `
+                                    <div class="message-bot" style="margin-top:10px;">
+                                        <p>${text}</p>
+                                    </div>
+                                `;
+                                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                            }
+                            
+                            if (btnSave) {
+                                handleTap(btnSave, async () => {
+                                    btnSave.disabled = true;
+                                    btnSell.style.display = 'none';
+                                    await saveCardToCloud('profile', {
+                                        name: aiData.nombre || 'Desconocido',
+                                        rarity: aiData.rareza || 'Normal',
+                                        summary: aiData.resumen || ''
+                                    }, true);
+                                    addBotReply("¡Listo! La carta ha sido agregada a tu portafolio. 🚀");
+                                });
+                            }
+                            
+                            if (btnSell) {
+                                handleTap(btnSell, async () => {
+                                    btnSell.disabled = true;
+                                    btnSave.style.display = 'none';
+                                    let price = prompt("¿A qué precio deseas venderla ($)?", aiData.precioEstimado || "0");
+                                    if(price !== null) {
+                                        await saveCardToCloud('market', {
+                                            name: aiData.nombre || 'Desconocido',
+                                            rarity: aiData.rareza || 'Normal',
+                                            summary: aiData.resumen || '',
+                                            price: price
+                                        }, true);
+                                        addBotReply("¡Publicada con éxito en el Marketplace! 💸");
+                                    } else {
+                                        btnSell.disabled = false;
+                                        btnSave.style.display = 'flex';
+                                    }
+                                });
+                            }
+                        }, 50);
+                    }
+                    // --- END CHAT LOGIC ---
 
                     currentEstimatedPrice = aiData.precioEstimado || "0";
 
                     if(cameraLoading) cameraLoading.style.display = 'none';
-                    if(cameraForm) cameraForm.style.display = 'block';
+                    if(cameraForm) cameraForm.style.display = 'flex';
                 } catch (error) {
                     console.error("Gemini Error:", error);
                     alert("Error al analizar la carta. Intenta de nuevo.");
@@ -476,12 +557,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if(cameraLoading) cameraLoading.style.display = 'none';
         if(cameraInitial) cameraInitial.style.display = 'flex';
         if(ocrUpload) ocrUpload.value = "";
-        if(scannedName) scannedName.value = "";
-        if(scannedRarity) scannedRarity.value = "";
-        const scannedAuth = document.getElementById('scanned-auth');
-        if(scannedAuth) scannedAuth.value = "";
-        const scannedSummary = document.getElementById('scanned-summary');
-        if(scannedSummary) scannedSummary.value = "";
+        const chatContainer = document.getElementById('chat-messages-container');
+        if(chatContainer) chatContainer.innerHTML = "";
         currentBase64 = "";
     }
 
@@ -517,12 +594,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return publicUrl;
     }
     
-    async function saveCardToCloud(category, extraData = {}) {
+    async function saveCardToCloud(category, extraData = {}, keepChatOpen = false) {
         try {
-            if(cameraForm) cameraForm.style.display = 'none';
-            if(cameraLoading) cameraLoading.style.display = 'flex';
-            const loadingText = document.querySelector('#camera-loading .loading-text');
-            if(loadingText) loadingText.innerText = "Subiendo carta a la nube...";
+            if(!keepChatOpen) {
+                if(cameraForm) cameraForm.style.display = 'none';
+                if(cameraLoading) cameraLoading.style.display = 'flex';
+                const loadingText = document.querySelector('#camera-loading .loading-text');
+                if(loadingText) loadingText.innerText = "Subiendo carta a la nube...";
+            }
 
             let publicUrl = currentBase64; 
             try {
@@ -531,14 +610,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.warn("Usando imagen local por restricción de Storage:", err);
             }
 
-            const scannedSummary = document.getElementById('scanned-summary');
-            const summaryText = scannedSummary ? scannedSummary.value : "";
-
             const newRecord = {
                 category: category,
-                name: scannedName ? scannedName.value : "Carta",
-                rarity: scannedRarity ? scannedRarity.value : "Normal",
-                summary: summaryText,
+                name: "Carta",
+                rarity: "Normal",
+                summary: "",
                 image: publicUrl,
                 ...extraData
             };
@@ -550,44 +626,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("Supabase no está inicializado.");
             }
 
-            resetCamera();
+            if(!keepChatOpen) resetCamera();
         } catch (err) {
             console.error("Error al guardar:", err);
             alert("Hubo un error al subir la carta. Comprueba tu conexión.");
-            resetCamera();
+            if(!keepChatOpen) resetCamera();
         }
     }
-
-    handleTap(document.getElementById('btn-save-profile'), async () => {
-        await saveCardToCloud('profile');
-        switchView('view-profile');
-    });
-
-    handleTap(document.getElementById('btn-save-home'), async () => {
-        let username = "@Anonymous";
-        let avatar = "https://i.pravatar.cc/150?img=11";
-        if(currentUser && currentUser.user_metadata) {
-            username = currentUser.user_metadata.username || currentUser.email;
-            if(currentUser.user_metadata.avatar_url) {
-                avatar = currentUser.user_metadata.avatar_url;
-            }
-        }
-        await saveCardToCloud('home', {
-            username: username,
-            avatar: avatar
-        });
-        switchView('view-home');
-    });
-
-    handleTap(document.getElementById('btn-save-l4t'), async () => {
-        let price = prompt("¿Qué precio estimado tiene esta carta ($)?", currentEstimatedPrice);
-        if(price === null) return;
-
-        await saveCardToCloud('market', {
-            price: price || "0"
-        });
-        switchView('view-l4t');
-    });
 
     const feedContainer = document.getElementById('feed-container');
     if(feedContainer) {
