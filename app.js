@@ -476,15 +476,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 if(scannedThumb) scannedThumb.src = currentBase64;
 
                 try {
+                    const mimeTypeMatch = currentBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
+                    const dynamicMimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
                     const base64Data = currentBase64.split(',')[1];
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{
                                 parts: [
                                     { text: 'Eres un tasador experto de Trading Card Games (TCG). Analiza esta imagen y devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta: { "nombre": "Nombre de la carta", "rareza": "Rareza", "precioEstimado": "numero en dolares", "autenticidad": "porcentaje% - estado", "resumen": "Breve historia o descripción de la carta (max 2 lineas)" }' },
-                                    { inline_data: { mime_type: 'image/jpeg', data: base64Data } }
+                                    { inline_data: { mime_type: dynamicMimeType, data: base64Data } }
                                 ]
                             }]
                         })
@@ -599,18 +602,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleTap(btnCancelScan, resetCamera);
 
-    function resizeImage(base64Str, maxWidth = 200) {
+    function resizeImage(base64Str, maxWidth = 800) {
         return new Promise((resolve) => {
             const img = new Image();
             img.src = base64Str;
             img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
+                    height = height * ratio;
+                }
+
                 const canvas = document.createElement('canvas');
-                const ratio = maxWidth / img.width;
-                canvas.width = maxWidth;
-                canvas.height = img.height * ratio;
+                canvas.width = width;
+                canvas.height = height;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.6)); // Reducido a 60% para mayor velocidad
             };
             img.onerror = () => resolve(base64Str);
         });
