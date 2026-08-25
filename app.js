@@ -354,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentEstimatedPrice = "50"; 
 
     // 🚨 PON TU CLAVE DE GEMINI AQUÍ ABAJO 🚨
-    const GEMINI_API_KEY = 'TU_CLAVE_GEMINI_AQUI';
+    const GEMINI_API_KEY = 'AQ.Ab8RN6Lb0bdZsydMaS3j8zkWxyfWDDFBvyPyHn9X8ngWIJHepw';
 
     if (btnScanTrigger && ocrUpload) {
         btnScanTrigger.addEventListener('click', () => {
