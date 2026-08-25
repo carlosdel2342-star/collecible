@@ -187,6 +187,11 @@
                         <label>Estado de Autenticidad (Verificado por IA)</label>
                         <input type="text" id="scanned-auth" class="form-input auth-verified" readonly>
                     </div>
+
+                    <div class="input-container">
+                        <label>Resumen de la Carta</label>
+                        <textarea id="scanned-summary" class="form-input" style="resize: vertical; min-height: 60px;" readonly></textarea>
+                    </div>
                     
                     <div class="action-buttons-group">
                         <button class="btn-action btn-save-profile" id="btn-save-profile">
@@ -212,55 +217,9 @@
             </header>
             <div class="view-body transparent-body">
                 <div class="chat-list">
-                    <!-- Chat 1 (Unread) -->
-                    <div class="chat-item unread">
-                        <img src="https://i.pravatar.cc/150?img=12" alt="Avatar" class="chat-avatar">
-                        <div class="chat-details">
-                            <h4 class="chat-name">AlexCollector</h4>
-                            <p class="chat-preview">Me interesa tu carta foil...</p>
-                        </div>
-                        <div class="chat-meta">
-                            <span class="chat-time">12:30 PM</span>
-                            <span class="unread-badge"></span>
-                        </div>
-                    </div>
-
-                    <!-- Chat 2 (Unread) -->
-                    <div class="chat-item unread">
-                        <img src="https://i.pravatar.cc/150?img=47" alt="Avatar" class="chat-avatar">
-                        <div class="chat-details">
-                            <h4 class="chat-name">PokeTrader99</h4>
-                            <p class="chat-preview">¿Aceptarías $40 por la base?</p>
-                        </div>
-                        <div class="chat-meta">
-                            <span class="chat-time">10:15 AM</span>
-                            <span class="unread-badge"></span>
-                        </div>
-                    </div>
-
-                    <!-- Chat 3 -->
-                    <div class="chat-item">
-                        <img src="https://i.pravatar.cc/150?img=5" alt="Avatar" class="chat-avatar">
-                        <div class="chat-details">
-                            <h4 class="chat-name">TCG_Master</h4>
-                            <p class="chat-preview">Gracias por el intercambio bro 🤝</p>
-                        </div>
-                        <div class="chat-meta">
-                            <span class="chat-time">Ayer</span>
-                        </div>
-                    </div>
-
-                    <!-- Chat 4 -->
-                    <div class="chat-item">
-                        <img src="https://i.pravatar.cc/150?img=68" alt="Avatar" class="chat-avatar">
-                        <div class="chat-details">
-                            <h4 class="chat-name">SarahPlays</h4>
-                            <p class="chat-preview">Envío realizado, aquí tienes el track...</p>
-                        </div>
-                        <div class="chat-meta">
-                            <span class="chat-time">Mar</span>
-                        </div>
-                    </div>
+                    <p class="placeholder-text" style="text-align:center; margin-top:50px;">
+                        No tienes mensajes aún. ¡Inicia un Trade para chatear!
+                    </p>
                 </div>
             </div>
         </div>

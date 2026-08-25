@@ -371,22 +371,50 @@ document.addEventListener("DOMContentLoaded", () => {
             if(loadingText) loadingText.innerText = "Procesando imagen con IA...";
 
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = async function(event) {
                 currentBase64 = event.target.result;
                 if(scannedThumb) scannedThumb.src = currentBase64;
 
-                setTimeout(() => {
-                    if(scannedName) scannedName.value = "Carta Coleccionable TCG";
-                    if(scannedRarity) scannedRarity.value = "Holográfica / Foil";
+                try {
+                    const base64Data = currentBase64.split(',')[1];
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: 'Eres un tasador experto de Trading Card Games (TCG). Analiza esta imagen y devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta: { "nombre": "Nombre de la carta", "rareza": "Rareza", "precioEstimado": "numero en dolares", "autenticidad": "porcentaje% - estado", "resumen": "Breve historia o descripción de la carta (max 2 lineas)" }' },
+                                    { inline_data: { mime_type: 'image/jpeg', data: base64Data } }
+                                ]
+                            }]
+                        })
+                    });
+                    
+                    if (!response.ok) throw new Error('Error en API Gemini');
+                    const data = await response.json();
+                    
+                    let jsonText = data.candidates[0].content.parts[0].text;
+                    jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const aiData = JSON.parse(jsonText);
+
+                    if(scannedName) scannedName.value = aiData.nombre || "Carta Coleccionable TCG";
+                    if(scannedRarity) scannedRarity.value = aiData.rareza || "Desconocida";
                     
                     const scannedAuth = document.getElementById('scanned-auth');
-                    if(scannedAuth) scannedAuth.value = "98% - Legítimo";
+                    if(scannedAuth) scannedAuth.value = aiData.autenticidad || "Verificación pendiente";
+                    
+                    const scannedSummary = document.getElementById('scanned-summary');
+                    if(scannedSummary) scannedSummary.value = aiData.resumen || "";
 
-                    currentEstimatedPrice = "45";
+                    currentEstimatedPrice = aiData.precioEstimado || "45";
 
                     if(cameraLoading) cameraLoading.style.display = 'none';
                     if(cameraForm) cameraForm.style.display = 'block';
-                }, 1000);
+                } catch (error) {
+                    console.error("Gemini Error:", error);
+                    alert("Error al analizar la carta. Intenta de nuevo.");
+                    resetCamera();
+                }
             };
             reader.readAsDataURL(file);
         });
@@ -401,6 +429,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if(scannedRarity) scannedRarity.value = "";
         const scannedAuth = document.getElementById('scanned-auth');
         if(scannedAuth) scannedAuth.value = "";
+        const scannedSummary = document.getElementById('scanned-summary');
+        if(scannedSummary) scannedSummary.value = "";
         currentBase64 = "";
     }
 
@@ -433,10 +463,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.warn("Usando imagen local por restricción de Storage:", err);
             }
 
+            const scannedSummary = document.getElementById('scanned-summary');
+            const summaryText = scannedSummary ? scannedSummary.value : "";
+
             const newRecord = {
                 category: category,
                 name: scannedName ? scannedName.value : "Carta",
                 rarity: scannedRarity ? scannedRarity.value : "Normal",
+                summary: summaryText,
                 image: publicUrl,
                 ...extraData
             };
