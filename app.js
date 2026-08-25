@@ -465,8 +465,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const file = e.target.files[0];
             if (!file) return;
 
-            if(cameraInitial) cameraInitial.style.display = 'none';
-            if(cameraLoading) cameraLoading.style.display = 'flex';
+            if(cameraInitial) { cameraInitial.classList.remove('state-active'); cameraInitial.classList.add('state-hidden'); }
+            if(cameraLoading) { cameraLoading.classList.remove('state-hidden'); cameraLoading.classList.add('state-active'); }
             const loadingText = document.querySelector('#camera-loading .loading-text');
             if(loadingText) loadingText.innerText = "Procesando imagen con IA...";
 
@@ -578,8 +578,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     currentEstimatedPrice = aiData.precioEstimado || "0";
 
-                    if(cameraLoading) cameraLoading.style.display = 'none';
-                    if(cameraForm) cameraForm.style.display = 'flex';
+                    if(cameraLoading) { cameraLoading.classList.remove('state-active'); cameraLoading.classList.add('state-hidden'); }
+                    if(cameraForm) { cameraForm.classList.remove('state-hidden'); cameraForm.classList.add('state-active'); }
                 } catch (error) {
                     console.error("Gemini Error:", error);
                     alert("Error al analizar la carta. Intenta de nuevo.");
@@ -591,9 +591,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function resetCamera() {
-        if(cameraForm) cameraForm.style.display = 'none';
-        if(cameraLoading) cameraLoading.style.display = 'none';
-        if(cameraInitial) cameraInitial.style.display = 'flex';
+        if(cameraForm) { cameraForm.classList.remove('state-active'); cameraForm.classList.add('state-hidden'); }
+        if(cameraLoading) { cameraLoading.classList.remove('state-active'); cameraLoading.classList.add('state-hidden'); }
+        if(cameraInitial) { cameraInitial.classList.remove('state-hidden'); cameraInitial.classList.add('state-active'); }
         if(ocrUpload) ocrUpload.value = "";
         const chatContainer = document.getElementById('chat-messages-container');
         if(chatContainer) chatContainer.innerHTML = "";
@@ -643,8 +643,8 @@ document.addEventListener("DOMContentLoaded", () => {
     async function saveCardToCloud(category, extraData = {}, keepChatOpen = false) {
         try {
             if(!keepChatOpen) {
-                if(cameraForm) cameraForm.style.display = 'none';
-                if(cameraLoading) cameraLoading.style.display = 'flex';
+                if(cameraForm) { cameraForm.classList.remove('state-active'); cameraForm.classList.add('state-hidden'); }
+                if(cameraLoading) { cameraLoading.classList.remove('state-hidden'); cameraLoading.classList.add('state-active'); }
                 const loadingText = document.querySelector('#camera-loading .loading-text');
                 if(loadingText) loadingText.innerText = "Subiendo carta a la nube...";
             }

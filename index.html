@@ -161,7 +161,7 @@
             </header>
             <div class="view-body transparent-body camera-container">
                 <!-- UI Inicial -->
-                <div id="camera-initial" class="camera-center">
+                <div id="camera-initial" class="camera-center state-active">
                     <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
                     <button id="btn-scan-trigger" class="btn-scan-main">
                         <i class="fa-solid fa-camera"></i> Escanear Nueva Carta
@@ -169,13 +169,13 @@
                 </div>
                 
                 <!-- Estado de Carga -->
-                <div id="camera-loading" class="camera-center" style="display: none;">
+                <div id="camera-loading" class="camera-center state-hidden">
                     <div class="scanner-spinner"></div>
                     <p class="loading-text">Analizando legitimidad y metadatos con IA...</p>
                 </div>
 
                 <!-- Formulario de Revisión (Chat UI) -->
-                <div id="camera-form" style="display: none;" class="chat-ui-container">
+                <div id="camera-form" class="chat-ui-container state-hidden">
                     <div class="chat-header-img">
                         <img id="scanned-thumb" src="" alt="Carta Escaneada">
                     </div>
