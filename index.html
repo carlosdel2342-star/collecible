@@ -27,25 +27,73 @@
             <p>El portal definitivo para tus TCG</p>
         </div>
         
-        <form id="auth-form" class="auth-form">
-            <div class="input-container">
-                <label>Correo Electrónico</label>
-                <input type="email" id="auth-email" placeholder="ejemplo@correo.com" class="form-input" required>
+        <!-- SUB-VISTA: LOGIN -->
+        <div id="auth-login" class="auth-subview" style="display: block; width: 100%;">
+            <form id="form-login" class="auth-form" style="margin: 0 auto;">
+                <div class="input-container">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="login-email" placeholder="ejemplo@correo.com" class="form-input" required>
+                </div>
+                <div class="input-container">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-password" placeholder="••••••••" class="form-input" required>
+                </div>
+                
+                <div class="action-buttons-group">
+                    <button type="submit" id="btn-login-submit" class="btn-action btn-auth-primary">
+                        Iniciar Sesión
+                    </button>
+                    <button type="button" id="btn-goto-register" class="btn-action btn-auth-secondary">
+                        Crear una cuenta nueva
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SUB-VISTA: REGISTRO -->
+        <div id="auth-register" class="auth-subview" style="display: none; width: 100%;">
+            <form id="form-register" class="auth-form" style="margin: 0 auto;">
+                <div class="input-container">
+                    <label>Nombre o Alias</label>
+                    <input type="text" id="register-name" placeholder="Tu nombre" class="form-input" required>
+                </div>
+                <div class="input-container">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="register-email" placeholder="ejemplo@correo.com" class="form-input" required>
+                </div>
+                <div class="input-container">
+                    <label>Contraseña</label>
+                    <input type="password" id="register-password" placeholder="••••••••" class="form-input" required>
+                </div>
+                <div class="input-container">
+                    <label>Confirmar Contraseña</label>
+                    <input type="password" id="register-password-confirm" placeholder="••••••••" class="form-input" required>
+                </div>
+                
+                <div class="action-buttons-group">
+                    <button type="submit" id="btn-register-submit" class="btn-action btn-auth-primary">
+                        Registrarse
+                    </button>
+                    <button type="button" id="btn-goto-login" class="btn-action btn-auth-secondary">
+                        Volver al Login
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SUB-VISTA: ÉXITO -->
+        <div id="auth-success" class="auth-subview" style="display: none; width: 100%; text-align: center;">
+            <div style="font-size: 3.5rem; color: #2ed573; margin-bottom: 20px;">
+                <i class="fa-solid fa-envelope-circle-check"></i>
             </div>
-            <div class="input-container">
-                <label>Contraseña</label>
-                <input type="password" id="auth-password" placeholder="••••••••" class="form-input" required>
-            </div>
-            
-            <div class="action-buttons-group">
-                <button type="submit" id="btn-login" class="btn-action btn-auth-primary">
-                    Iniciar Sesión
-                </button>
-                <button type="button" id="btn-signup" class="btn-action btn-auth-secondary">
-                    Crear Cuenta
-                </button>
-            </div>
-        </form>
+            <h2 style="margin-bottom: 15px; font-weight: 800; font-size: 1.5rem;">¡Registro exitoso!</h2>
+            <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 30px;">
+                Te hemos enviado un enlace de confirmación a tu correo. Haz clic en él para activar tu cuenta.
+            </p>
+            <button type="button" id="btn-success-login" class="btn-action btn-auth-primary" style="max-width: 350px; margin: 0 auto;">
+                Volver al Login
+            </button>
+        </div>
     </div>
 
     <!-- Contenedor Principal (Vistas) -->

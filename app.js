@@ -21,10 +21,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const viewAuth = document.getElementById('view-auth');
     const appContent = document.getElementById('app-content');
     const bottomNav = document.getElementById('bottom-nav');
-    const authEmail = document.getElementById('auth-email');
-    const authPassword = document.getElementById('auth-password');
-    const btnLogin = document.getElementById('btn-login');
-    const btnSignup = document.getElementById('btn-signup');
+    const authLogin = document.getElementById('auth-login');
+    const authRegister = document.getElementById('auth-register');
+    const authSuccess = document.getElementById('auth-success');
+
+    const loginEmail = document.getElementById('login-email');
+    const loginPassword = document.getElementById('login-password');
+    const btnLoginSubmit = document.getElementById('btn-login-submit');
+    const btnGotoRegister = document.getElementById('btn-goto-register');
+
+    const registerName = document.getElementById('register-name');
+    const registerEmail = document.getElementById('register-email');
+    const registerPassword = document.getElementById('register-password');
+    const registerPasswordConfirm = document.getElementById('register-password-confirm');
+    const btnRegisterSubmit = document.getElementById('btn-register-submit');
+    const btnGotoLogin = document.getElementById('btn-goto-login');
+
+    const btnSuccessLogin = document.getElementById('btn-success-login');
     const btnLogout = document.getElementById('btn-logout');
 
     if (supabase) {
@@ -57,35 +70,75 @@ document.addEventListener("DOMContentLoaded", () => {
                 viewAuth.style.display = 'flex';
                 appContent.style.display = 'none';
                 bottomNav.style.display = 'none';
+                
+                // Reiniciar a la vista de login si se cierra sesión
+                if(authLogin && authRegister && authSuccess) {
+                    authLogin.style.display = 'block';
+                    authRegister.style.display = 'none';
+                    authSuccess.style.display = 'none';
+                }
             }
         });
     }
-    if (btnLogin && btnSignup) {
-        // Manejar Login
-        handleTap(btnLogin, async (e) => {
+
+    // --- NAVEGACIÓN DE VISTAS AUTH ---
+    if (btnGotoRegister) {
+        handleTap(btnGotoRegister, () => {
+            authLogin.style.display = 'none';
+            authRegister.style.display = 'block';
+        });
+    }
+    if (btnGotoLogin) {
+        handleTap(btnGotoLogin, () => {
+            authRegister.style.display = 'none';
+            authLogin.style.display = 'block';
+        });
+    }
+    if (btnSuccessLogin) {
+        handleTap(btnSuccessLogin, () => {
+            authSuccess.style.display = 'none';
+            authLogin.style.display = 'block';
+        });
+    }
+
+    // --- ACCIONES DE AUTH ---
+    if (btnLoginSubmit) {
+        handleTap(btnLoginSubmit, async (e) => {
             e.preventDefault();
-            if (!authEmail.value || !authPassword.value) return alert("Por favor, llena los campos.");
+            if (!loginEmail.value || !loginPassword.value) return alert("Por favor, llena los campos.");
             
             const { error } = await supabase.auth.signInWithPassword({
-                email: authEmail.value,
-                password: authPassword.value,
+                email: loginEmail.value,
+                password: loginPassword.value,
             });
             if (error) alert("Error al iniciar sesión: " + error.message);
         });
+    }
 
-        // Manejar Registro
-        handleTap(btnSignup, async (e) => {
+    if (btnRegisterSubmit) {
+        handleTap(btnRegisterSubmit, async (e) => {
             e.preventDefault();
-            if (!authEmail.value || !authPassword.value) return alert("Por favor, llena los campos.");
+            if (!registerName.value || !registerEmail.value || !registerPassword.value || !registerPasswordConfirm.value) {
+                return alert("Por favor, llena todos los campos.");
+            }
+            if (registerPassword.value !== registerPasswordConfirm.value) {
+                return alert("Las contraseñas no coinciden.");
+            }
             
-            const { data, error } = await supabase.auth.signUp({
-                email: authEmail.value,
-                password: authPassword.value,
+            const { error } = await supabase.auth.signUp({
+                email: registerEmail.value,
+                password: registerPassword.value,
+                options: {
+                    data: {
+                        display_name: registerName.value
+                    }
+                }
             });
             if (error) {
                 alert("Error al registrar: " + error.message);
             } else {
-                alert("Cuenta creada. Por favor, revisa tu bandeja de entrada para confirmar tu correo electrónico antes de iniciar sesión.");
+                authRegister.style.display = 'none';
+                authSuccess.style.display = 'block';
             }
         });
     }
