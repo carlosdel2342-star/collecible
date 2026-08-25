@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: loginEmail.value,
                 password: loginPassword.value,
             });
-            if (error) alert("Error al iniciar sesión: " + error.message);
+            if (error) alert(error.message);
         });
     }
 
@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
             if (error) {
-                alert("Error al registrar: " + error.message);
+                alert(error.message);
             } else {
                 authRegister.style.display = 'none';
                 authSuccess.style.display = 'block';
