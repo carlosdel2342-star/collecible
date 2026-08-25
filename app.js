@@ -374,6 +374,29 @@ Analiza esta imagen y retorna OBLIGATORIAMENTE un JSON válido con la siguiente 
         switchView('view-l4t');
     });
 
+    // --- DELEGACIÓN DE EVENTOS (EVENT DELEGATION) PARA FEED Y MARKET ---
+    // Atamos los eventos a los contenedores principales para botones generados dinámicamente.
+    
+    const feedContainer = document.getElementById('feed-container');
+    if(feedContainer) {
+        handleTap(feedContainer, (e) => {
+            const btn = e.target.closest('.btn-trade');
+            if(btn) {
+                alert("¡Has solicitado iniciar un Trade por esta carta!");
+            }
+        });
+    }
+
+    const marketContainer = document.getElementById('market-container');
+    if(marketContainer) {
+        handleTap(marketContainer, (e) => {
+            const btn = e.target.closest('.btn-offer');
+            if(btn) {
+                alert("¡Oferta enviada al vendedor!");
+            }
+        });
+    }
+
     // Iniciar aplicación cargando datos
     loadData();
 });

@@ -30,6 +30,9 @@ body {
     background-color: var(--bg-color);
     color: var(--text-primary);
     width: 100%;
+    max-width: 480px; /* Constriñe a ancho de móvil en pantallas grandes */
+    margin: 0 auto;
+    position: relative;
     height: 100vh;
     height: 100dvh; /* Altura dinámica para navegadores móviles modernos */
     overflow: hidden; /* Evita el scroll global; las vistas harán scroll si es necesario */
@@ -43,9 +46,19 @@ body {
     position: relative;
     width: 100%;
     height: calc(100% - 80px); /* Deja espacio para la nav bar */
+    padding-top: env(safe-area-inset-top, 10px); /* Espacio para el Notch */
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch; /* IMPORTANTÍSIMO PARA IOS */
+}
+
+/* Ocultar barras de scroll globalmente */
+::-webkit-scrollbar {
+    display: none;
+}
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Views Management */
@@ -55,6 +68,7 @@ body {
     min-height: 100%;
     padding: 20px;
     animation: fadeScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity; /* Aceleración HW */
 }
 
 .view.active {
@@ -99,8 +113,10 @@ body {
 .bottom-nav {
     position: fixed;
     bottom: 0;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
     width: 100%;
+    max-width: 480px; /* Igualar al body en desktop */
     height: 85px; /* Ligeramente más alto para mejor toque */
     background: var(--nav-bg);
     backdrop-filter: blur(20px);
@@ -111,6 +127,7 @@ body {
     align-items: center;
     padding-bottom: env(safe-area-inset-bottom, 15px); /* Espacio para el home indicator de iOS */
     z-index: 1000;
+    will-change: transform;
 }
 
 .nav-btn {
