@@ -25,6 +25,20 @@ button, a, input, select, textarea, .nav-btn, .action-btn {
     --nav-bg: rgba(20, 20, 30, 0.75);
 }
 
+.btn-trade {
+    background-color: var(--card-bg);
+    color: var(--text-secondary);
+}
+
+.auth-logo {
+    max-width: 180px;
+    width: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    margin-bottom: 24px;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--bg-color);
