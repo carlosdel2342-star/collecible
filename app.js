@@ -44,7 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const viewOnboarding = document.getElementById('view-onboarding');
     const onboardingUsername = document.getElementById('onboarding-username');
     const onboardingBio = document.getElementById('onboarding-bio');
-    const onboardingAvatar = document.getElementById('onboarding-avatar');
+    const onboardingAvatarFile = document.getElementById('onboarding-avatar-file');
+    const onboardingAvatarPreview = document.getElementById('onboarding-avatar-preview');
     const btnOnboardingSubmit = document.getElementById('btn-onboarding-submit');
 
     function handleSession(session) {
@@ -109,22 +110,57 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    let onboardingBase64 = "";
+
+    if (onboardingAvatarFile && onboardingAvatarPreview) {
+        onboardingAvatarFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                onboardingBase64 = event.target.result;
+                onboardingAvatarPreview.src = onboardingBase64;
+                onboardingAvatarPreview.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     if (btnOnboardingSubmit) {
         handleTap(btnOnboardingSubmit, async (e) => {
             e.preventDefault();
             if (!onboardingUsername.value) return alert("El Username es obligatorio.");
             
+            const originalText = btnOnboardingSubmit.innerText;
+            btnOnboardingSubmit.innerText = "Preparando perfil...";
+            btnOnboardingSubmit.disabled = true;
+
+            let finalAvatarUrl = "https://i.pravatar.cc/150?img=11";
+            
+            if (onboardingBase64) {
+                try {
+                    btnOnboardingSubmit.innerText = "Subiendo foto...";
+                    finalAvatarUrl = await uploadImageToSupabase(onboardingBase64);
+                } catch (err) {
+                    console.warn("Fallo al subir avatar a Supabase, usando default.", err);
+                }
+            }
+
             const { data, error } = await supabase.auth.updateUser({
                 data: {
                     username: onboardingUsername.value,
                     bio: onboardingBio.value || "",
-                    avatar_url: onboardingAvatar.value || "https://i.pravatar.cc/150?img=11"
+                    avatar_url: finalAvatarUrl
                 }
             });
             if (error) {
                 alert(error.message);
+                btnOnboardingSubmit.innerText = originalText;
+                btnOnboardingSubmit.disabled = false;
             } else {
                 currentUser = data.user;
+                btnOnboardingSubmit.innerText = originalText;
+                btnOnboardingSubmit.disabled = false;
                 handleSession({ user: currentUser });
             }
         });
@@ -312,10 +348,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const profileAvatarImg = document.getElementById('profile-avatar-img');
 
         if(profileNameText && currentUser && currentUser.user_metadata) {
-            profileNameText.innerText = currentUser.user_metadata.username || currentUser.email;
+            profileNameText.innerText = currentUser.user_metadata.username ? `@${currentUser.user_metadata.username}` : currentUser.email;
         }
         if(profileBioText && currentUser && currentUser.user_metadata) {
-            profileBioText.innerText = currentUser.user_metadata.bio || "Coleccionista apasionado de TCG.";
+            profileBioText.innerText = currentUser.user_metadata.bio || "Coleccionista de TCG";
         }
         if(profileAvatarImg && currentUser && currentUser.user_metadata) {
             profileAvatarImg.src = currentUser.user_metadata.avatar_url || "https://i.pravatar.cc/150?img=11";

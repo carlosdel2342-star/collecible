@@ -110,8 +110,11 @@
                 <input type="text" id="onboarding-bio" placeholder="Coleccionista novato..." class="form-input">
             </div>
             <div class="input-container">
-                <label>URL de Avatar (Opcional)</label>
-                <input type="url" id="onboarding-avatar" placeholder="https://..." class="form-input">
+                <label>Foto de Perfil (Opcional)</label>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <img id="onboarding-avatar-preview" src="https://i.pravatar.cc/150?img=11" alt="Avatar Preview" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); display: none;">
+                </div>
+                <input type="file" id="onboarding-avatar-file" accept="image/*" class="form-input">
             </div>
             
             <div class="action-buttons-group">
@@ -248,7 +251,7 @@
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat">
-                        <span class="stat-number">1.2K</span>
+                        <span class="stat-number">0</span>
                         <span class="stat-label">Seguidores</span>
                     </div>
                     <div class="stat-divider"></div>
