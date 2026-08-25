@@ -580,4 +580,53 @@ document.addEventListener("DOMContentLoaded", () => {
             if(btn) alert("¡Oferta enviada al vendedor!");
         });
     }
+
+    // --- EDICIÓN DINÁMICA DE AVATAR EN PERFIL ---
+    const btnEditAvatar = document.getElementById('btn-edit-avatar');
+    const profileAvatarUpload = document.getElementById('profile-avatar-upload');
+
+    if (btnEditAvatar && profileAvatarUpload) {
+        handleTap(btnEditAvatar, () => {
+            profileAvatarUpload.click();
+        });
+
+        profileAvatarUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const base64Data = event.target.result;
+                const profileAvatarImg = document.getElementById('profile-avatar-img');
+                if(profileAvatarImg) {
+                    profileAvatarImg.src = base64Data;
+                    profileAvatarImg.style.opacity = '0.5';
+                }
+
+                try {
+                    const finalAvatarUrl = await uploadImageToSupabase(base64Data);
+                    
+                    const { data, error } = await supabase.auth.updateUser({
+                        data: {
+                            avatar_url: finalAvatarUrl
+                        }
+                    });
+                    
+                    if (error) {
+                        alert(error.message);
+                    } else {
+                        currentUser = data.user;
+                        renderProfile(); 
+                    }
+                } catch (err) {
+                    console.error("Error al actualizar avatar:", err);
+                    alert("No se pudo actualizar tu foto de perfil.");
+                } finally {
+                    if(profileAvatarImg) profileAvatarImg.style.opacity = '1';
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
 });
