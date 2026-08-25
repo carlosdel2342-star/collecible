@@ -96,6 +96,38 @@
         </div>
     </div>
 
+    <!-- Vista: Onboarding -->
+    <div id="view-onboarding" class="auth-container" style="display: none;">
+        <div class="auth-header">
+            <div class="auth-logo-wrapper">
+                <i class="fa-solid fa-id-card-clip"></i>
+            </div>
+            <h1>Configura tu Perfil</h1>
+            <p>Cuéntanos un poco sobre ti</p>
+        </div>
+        
+        <form id="form-onboarding" class="auth-form" style="width: 100%;">
+            <div class="input-container">
+                <label>Username</label>
+                <input type="text" id="onboarding-username" placeholder="@tu_usuario" class="form-input" required>
+            </div>
+            <div class="input-container">
+                <label>Bio (Opcional)</label>
+                <input type="text" id="onboarding-bio" placeholder="Coleccionista novato..." class="form-input">
+            </div>
+            <div class="input-container">
+                <label>URL de Avatar (Opcional)</label>
+                <input type="url" id="onboarding-avatar" placeholder="https://..." class="form-input">
+            </div>
+            
+            <div class="action-buttons-group">
+                <button type="submit" id="btn-onboarding-submit" class="btn-action btn-auth-primary">
+                    Comenzar mi Colección
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Contenedor Principal (Vistas) -->
     <main id="app-content" style="display: none;">
         
@@ -249,10 +281,10 @@
                 <div class="profile-header">
                     <div class="profile-banner"></div>
                     <div class="profile-avatar-container">
-                        <img src="https://i.pravatar.cc/150?img=11" alt="Mi Avatar" class="profile-avatar">
+                        <img src="" alt="Mi Avatar" class="profile-avatar" id="profile-avatar-img" style="background-color: var(--card-bg);">
                     </div>
-                    <h2 class="profile-name">@CJMonii</h2>
-                    <p class="profile-bio">Coleccionista apasionado de TCG. Buscando rarezas de la primera edición y cartas holográficas.</p>
+                    <h2 class="profile-name" id="profile-name-text"></h2>
+                    <p class="profile-bio" id="profile-bio-text"></p>
                 </div>
 
                 <!-- Estadísticas -->

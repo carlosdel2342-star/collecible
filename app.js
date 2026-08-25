@@ -41,41 +41,51 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSuccessLogin = document.getElementById('btn-success-login');
     const btnLogout = document.getElementById('btn-logout');
 
-    if (supabase) {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
-                currentUser = session.user;
+    const viewOnboarding = document.getElementById('view-onboarding');
+    const onboardingUsername = document.getElementById('onboarding-username');
+    const onboardingBio = document.getElementById('onboarding-bio');
+    const onboardingAvatar = document.getElementById('onboarding-avatar');
+    const btnOnboardingSubmit = document.getElementById('btn-onboarding-submit');
+
+    function handleSession(session) {
+        if (session) {
+            currentUser = session.user;
+            if (!currentUser.user_metadata || !currentUser.user_metadata.username) {
+                // Faltan datos de Onboarding
                 if(viewAuth) viewAuth.style.display = 'none';
+                if(appContent) appContent.style.display = 'none';
+                if(bottomNav) bottomNav.style.display = 'none';
+                if(viewOnboarding) viewOnboarding.style.display = 'flex';
+            } else {
+                // Perfil completo
+                if(viewAuth) viewAuth.style.display = 'none';
+                if(viewOnboarding) viewOnboarding.style.display = 'none';
                 if(appContent) appContent.style.display = 'block';
                 if(bottomNav) bottomNav.style.display = 'flex';
                 loadData();
-            } else {
-                currentUser = null;
-                if(viewAuth) viewAuth.style.display = 'flex';
-                if(appContent) appContent.style.display = 'none';
-                if(bottomNav) bottomNav.style.display = 'none';
             }
+        } else {
+            currentUser = null;
+            if(viewAuth) viewAuth.style.display = 'flex';
+            if(viewOnboarding) viewOnboarding.style.display = 'none';
+            if(appContent) appContent.style.display = 'none';
+            if(bottomNav) bottomNav.style.display = 'none';
+            
+            if(authLogin && authRegister && authSuccess) {
+                authLogin.style.display = 'block';
+                authRegister.style.display = 'none';
+                authSuccess.style.display = 'none';
+            }
+        }
+    }
+
+    if (supabase) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            handleSession(session);
         });
 
         supabase.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                currentUser = session.user;
-                if(viewAuth) viewAuth.style.display = 'none';
-                if(appContent) appContent.style.display = 'block';
-                if(bottomNav) bottomNav.style.display = 'flex';
-                loadData(); 
-            } else {
-                currentUser = null;
-                if(viewAuth) viewAuth.style.display = 'flex';
-                if(appContent) appContent.style.display = 'none';
-                if(bottomNav) bottomNav.style.display = 'none';
-                
-                if(authLogin && authRegister && authSuccess) {
-                    authLogin.style.display = 'block';
-                    authRegister.style.display = 'none';
-                    authSuccess.style.display = 'none';
-                }
-            }
+            handleSession(session);
         });
     }
 
@@ -96,6 +106,27 @@ document.addEventListener("DOMContentLoaded", () => {
         handleTap(btnSuccessLogin, () => {
             authSuccess.style.display = 'none';
             authLogin.style.display = 'block';
+        });
+    }
+
+    if (btnOnboardingSubmit) {
+        handleTap(btnOnboardingSubmit, async (e) => {
+            e.preventDefault();
+            if (!onboardingUsername.value) return alert("El Username es obligatorio.");
+            
+            const { data, error } = await supabase.auth.updateUser({
+                data: {
+                    username: onboardingUsername.value,
+                    bio: onboardingBio.value || "",
+                    avatar_url: onboardingAvatar.value || "https://i.pravatar.cc/150?img=11"
+                }
+            });
+            if (error) {
+                alert(error.message);
+            } else {
+                currentUser = data.user;
+                handleSession({ user: currentUser });
+            }
         });
     }
 
@@ -215,7 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         homeFeed.slice().reverse().forEach(post => {
             const avatar = post.avatar || "https://i.pravatar.cc/150?img=11";
-            const username = post.username || "@CJMonii";
+            const username = post.username || "@Coleccionista";
 
             container.innerHTML += `
                 <article class="post">
@@ -275,6 +306,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderProfile() {
         const container = document.getElementById('profile-gallery-container');
+        
+        const profileNameText = document.getElementById('profile-name-text');
+        const profileBioText = document.getElementById('profile-bio-text');
+        const profileAvatarImg = document.getElementById('profile-avatar-img');
+
+        if(profileNameText && currentUser && currentUser.user_metadata) {
+            profileNameText.innerText = currentUser.user_metadata.username || currentUser.email;
+        }
+        if(profileBioText && currentUser && currentUser.user_metadata) {
+            profileBioText.innerText = currentUser.user_metadata.bio || "Coleccionista apasionado de TCG.";
+        }
+        if(profileAvatarImg && currentUser && currentUser.user_metadata) {
+            profileAvatarImg.src = currentUser.user_metadata.avatar_url || "https://i.pravatar.cc/150?img=11";
+        }
+
         if(!container) return;
         container.innerHTML = '';
         
@@ -416,10 +462,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     handleTap(document.getElementById('btn-save-home'), async () => {
-        const username = currentUser ? currentUser.email : "@Anonymous";
+        let username = "@Anonymous";
+        let avatar = "https://i.pravatar.cc/150?img=11";
+        if(currentUser && currentUser.user_metadata) {
+            username = currentUser.user_metadata.username || currentUser.email;
+            if(currentUser.user_metadata.avatar_url) {
+                avatar = currentUser.user_metadata.avatar_url;
+            }
+        }
         await saveCardToCloud('home', {
             username: username,
-            avatar: "https://i.pravatar.cc/150?img=11"
+            avatar: avatar
         });
         switchView('view-home');
     });
