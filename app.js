@@ -614,7 +614,7 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
                             category: 'profile',
                             name: functionCall.args.nombre || 'Desconocido',
                             rarity: 'Normal',
-                            summary: 'Guardado desde Asistente IA',
+                            price: functionCall.args.precioEstimado || "0",
                             image: publicUrl
                         }]);
                         if (insertError) console.error("Error guardando en cards:", insertError);
@@ -760,15 +760,23 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
             fileName = `${currentUser.id}/${fileName}`;
         }
         
-        const { error } = await supabase.storage.from('card-images').upload(fileName, blob, {
-            contentType: mimeType,
-            cacheControl: '3600',
-            upsert: false
-        });
-        if (error) throw error;
-        
-        const { data: { publicUrl } } = supabase.storage.from('card-images').getPublicUrl(fileName);
-        return publicUrl;
+        try {
+            const { error } = await supabase.storage.from('card-images').upload(fileName, blob, {
+                contentType: mimeType,
+                cacheControl: '3600',
+                upsert: false
+            });
+            if (error) {
+                console.warn("Storage upload failed, falling back to base64:", error);
+                return base64Str;
+            }
+            
+            const { data: { publicUrl } } = supabase.storage.from('card-images').getPublicUrl(fileName);
+            return publicUrl;
+        } catch (err) {
+            console.warn("Storage exception, falling back to base64:", err);
+            return base64Str;
+        }
     }
 
     // --- TABS DEL PERFIL ---
