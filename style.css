@@ -927,6 +927,25 @@ body {
 .message-bot p { margin: 5px 0; }
 .message-bot strong { color: #fff; }
 
+.message-user {
+    align-self: flex-end;
+    background: var(--accent-gradient);
+    padding: 12px 15px;
+    border-radius: 15px;
+    border-bottom-right-radius: 2px;
+    max-width: 90%;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.message-user img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+
 .chat-actions {
     display: flex;
     flex-direction: column;
@@ -955,6 +974,27 @@ body {
     padding: 10px;
     background: rgba(0,0,0,0.3);
     border-top: 1px solid rgba(255,255,255,0.1);
+    align-items: center;
+}
+
+.btn-attach {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 40px;
+    height: 40px;
+    margin-right: 5px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    transition: 0.2s;
+}
+
+.btn-attach:active {
+    color: white;
+    transform: scale(0.9);
 }
 
 .chat-input {

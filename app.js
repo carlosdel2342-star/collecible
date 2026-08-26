@@ -439,168 +439,143 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- CÁMARA E INTELIGENCIA ARTIFICIAL SEGURA ---
-    const btnScanTrigger = document.getElementById('btn-scan-trigger');
+    // --- ASISTENTE IA (CHAT MULTI-TURNO) ---
     const ocrUpload = document.getElementById('ocr-upload');
-    const cameraInitial = document.getElementById('camera-initial');
-    const cameraLoading = document.getElementById('camera-loading');
-    const cameraForm = document.getElementById('camera-form');
-    const scannedThumb = document.getElementById('scanned-thumb');
-    const scannedName = document.getElementById('scanned-name');
-    const scannedRarity = document.getElementById('scanned-rarity');
-    const btnCancelScan = document.getElementById('btn-cancel-scan');
-    
-    let currentBase64 = "";
-    let currentEstimatedPrice = "50"; 
+    const btnAttachImage = document.getElementById('btn-attach-image');
+    const chatInputText = document.getElementById('chat-input-text');
+    const btnChatSend = document.getElementById('btn-chat-send');
+    const chatMessagesContainer = document.getElementById('chat-messages-container');
+    const chatUploadProgress = document.getElementById('chat-upload-progress');
 
+    let aiChatHistory = [];
+    let currentBase64 = "";
+    
     // 🚨 PON TU CLAVE DE GEMINI AQUÍ ABAJO 🚨
     const GEMINI_API_KEY = 'AQ.Ab8RN6Lb0bdZsydMaS3j8zkWxyfWDDFBvyPyHn9X8ngWIJHepw';
 
-    if (btnScanTrigger && ocrUpload) {
-        btnScanTrigger.addEventListener('click', () => {
-            ocrUpload.click();
-        });
+    const SYSTEM_PROMPT = `Eres Collecible AI, el experto tasador oficial de una app de TCG (Trading Card Games).
+Tu trabajo es responder amigablemente, ayudar a los usuarios a identificar sus cartas cuando envíen imágenes, y estimar sus precios de mercado.
+Responde de manera concisa y usa formato markdown si es necesario.`;
 
-        ocrUpload.addEventListener('change', (e) => {
+    function appendMessage(role, text, imageSrc = null) {
+        if (!chatMessagesContainer) return;
+        
+        let msgHtml = '';
+        if (role === 'user') {
+            msgHtml = `<div class="message-user">`;
+            if (imageSrc) msgHtml += `<img src="${imageSrc}" alt="Imagen subida">`;
+            if (text) msgHtml += `<p>${text}</p>`;
+            msgHtml += `</div>`;
+        } else {
+            msgHtml = `
+            <div class="message-bot">
+                <h3>Collecible AI 🤖</h3>
+                <p>${text}</p>
+            </div>`;
+        }
+        
+        chatMessagesContainer.innerHTML += msgHtml;
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
+
+    async function sendToGemini(text, base64Str = null) {
+        if (!text && !base64Str) return;
+
+        let userParts = [];
+        if (text) userParts.push({ text: text });
+        
+        let dynamicMimeType = 'image/jpeg';
+        let rawBase64 = null;
+
+        if (base64Str) {
+            const mimeTypeMatch = base64Str.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
+            if (mimeTypeMatch) dynamicMimeType = mimeTypeMatch[1];
+            rawBase64 = base64Str.split(',')[1];
+            userParts.push({
+                inline_data: { mime_type: dynamicMimeType, data: rawBase64 }
+            });
+        }
+        
+        appendMessage('user', text, base64Str);
+        aiChatHistory.push({ role: 'user', parts: userParts });
+
+        if (chatUploadProgress) chatUploadProgress.style.display = 'block';
+        if (chatInputText) chatInputText.disabled = true;
+        if (btnChatSend) btnChatSend.disabled = true;
+
+        try {
+            const payload = {
+                system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                contents: aiChatHistory
+            };
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) throw new Error('Error en API Gemini');
+            const data = await response.json();
+            
+            let modelText = data.candidates[0].content.parts[0].text;
+            
+            // Reemplazar markdown simple de negritas y saltos de línea para HTML
+            const formattedText = modelText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            
+            appendMessage('model', formattedText);
+            aiChatHistory.push({ role: 'model', parts: [{ text: modelText }] });
+
+        } catch (error) {
+            console.error("Gemini Error:", error);
+            appendMessage('model', 'Lo siento, hubo un problema al procesar tu solicitud. ¿Puedes intentarlo de nuevo?');
+        } finally {
+            if (chatUploadProgress) chatUploadProgress.style.display = 'none';
+            if (chatInputText) chatInputText.disabled = false;
+            if (btnChatSend) btnChatSend.disabled = false;
+            if (chatInputText) chatInputText.focus();
+        }
+    }
+
+    if (btnAttachImage && ocrUpload) {
+        handleTap(btnAttachImage, () => ocrUpload.click());
+        
+        ocrUpload.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            if(cameraInitial) { cameraInitial.classList.remove('state-active'); cameraInitial.classList.add('state-hidden'); }
-            if(cameraLoading) { cameraLoading.classList.remove('state-hidden'); cameraLoading.classList.add('state-active'); }
-            const loadingText = document.querySelector('#camera-loading .loading-text');
-            if(loadingText) loadingText.innerText = "Procesando imagen con IA...";
-
+            
+            if (chatUploadProgress) {
+                chatUploadProgress.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparando imagen...';
+                chatUploadProgress.style.display = 'block';
+            }
+            
             const reader = new FileReader();
             reader.onload = async function(event) {
-                currentBase64 = await resizeImage(event.target.result, 800);
-                if(scannedThumb) scannedThumb.src = currentBase64;
-
-                try {
-                    const mimeTypeMatch = currentBase64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
-                    const dynamicMimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg';
-                    const base64Data = currentBase64.split(',')[1];
-                    
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [
-                                    { text: 'Eres un tasador experto de Trading Card Games (TCG). Analiza esta imagen y devuelve ÚNICAMENTE un objeto JSON válido con esta estructura exacta: { "nombre": "Nombre de la carta", "rareza": "Rareza", "precioEstimado": "numero en dolares", "autenticidad": "porcentaje% - estado", "resumen": "Breve historia o descripción de la carta (max 2 lineas)" }' },
-                                    { inline_data: { mime_type: dynamicMimeType, data: base64Data } }
-                                ]
-                            }]
-                        })
-                    });
-                    
-                    if (!response.ok) throw new Error('Error en API Gemini');
-                    const data = await response.json();
-                    
-                    let jsonText = data.candidates[0].content.parts[0].text;
-                    console.log("Respuesta cruda de Gemini:", jsonText);
-                    
-                    jsonText = jsonText.replace(/```json/gi, '').replace(/```/g, '').trim();
-                    
-                    let aiData = {};
-                    try {
-                        aiData = JSON.parse(jsonText);
-                    } catch(e) {
-                        console.warn("Fallo al parsear JSON, usando valores por defecto. Error:", e);
-                    }
-
-                    // --- NEW CHAT LOGIC ---
-                    const chatMessagesContainer = document.getElementById('chat-messages-container');
-                    
-                    if(chatMessagesContainer) {
-                        chatMessagesContainer.innerHTML = `
-                            <div class="message-bot">
-                                <h3>Análisis Completado 🤖</h3>
-                                <p><strong>Nombre:</strong> ${aiData.nombre || 'Desconocido'}</p>
-                                <p><strong>Rareza:</strong> ${aiData.rareza || 'Normal'}</p>
-                                <p><strong>Autenticidad:</strong> ${aiData.autenticidad || 'Sin verificar'}</p>
-                                <p><strong>Precio Estimado:</strong> $${aiData.precioEstimado || '0'}</p>
-                                <p><em>${aiData.resumen || 'Sin resumen disponible.'}</em></p>
-                                <div class="chat-actions">
-                                    <button class="btn-chat-action" id="chat-btn-save">➕ Guardar en mi Portafolio</button>
-                                    <button class="btn-chat-action" id="chat-btn-sell">🏷️ Publicar en L4T (Mercado)</button>
-                                </div>
-                            </div>
-                        `;
-                        
-                        setTimeout(() => {
-                            const btnSave = document.getElementById('chat-btn-save');
-                            const btnSell = document.getElementById('chat-btn-sell');
-                            
-                            function addBotReply(text) {
-                                chatMessagesContainer.innerHTML += `
-                                    <div class="message-bot" style="margin-top:10px;">
-                                        <p>${text}</p>
-                                    </div>
-                                `;
-                                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-                            }
-                            
-                            if (btnSave) {
-                                handleTap(btnSave, async () => {
-                                    btnSave.disabled = true;
-                                    btnSell.style.display = 'none';
-                                    await saveCardToCloud('profile', {
-                                        name: aiData.nombre || 'Desconocido',
-                                        rarity: aiData.rareza || 'Normal',
-                                        summary: aiData.resumen || ''
-                                    }, true);
-                                    addBotReply("¡Listo! La carta ha sido agregada a tu portafolio. 🚀");
-                                });
-                            }
-                            
-                            if (btnSell) {
-                                handleTap(btnSell, async () => {
-                                    btnSell.disabled = true;
-                                    btnSave.style.display = 'none';
-                                    let price = prompt("¿A qué precio deseas venderla ($)?", aiData.precioEstimado || "0");
-                                    if(price !== null) {
-                                        await saveCardToCloud('market', {
-                                            name: aiData.nombre || 'Desconocido',
-                                            rarity: aiData.rareza || 'Normal',
-                                            summary: aiData.resumen || '',
-                                            price: price
-                                        }, true);
-                                        addBotReply("¡Publicada con éxito en el Marketplace! 💸");
-                                    } else {
-                                        btnSell.disabled = false;
-                                        btnSave.style.display = 'flex';
-                                    }
-                                });
-                            }
-                        }, 50);
-                    }
-                    // --- END CHAT LOGIC ---
-
-                    currentEstimatedPrice = aiData.precioEstimado || "0";
-
-                    if(cameraLoading) { cameraLoading.classList.remove('state-active'); cameraLoading.classList.add('state-hidden'); }
-                    if(cameraForm) { cameraForm.classList.remove('state-hidden'); cameraForm.classList.add('state-active'); }
-                } catch (error) {
-                    console.error("Gemini Error:", error);
-                    alert("Error al analizar la carta. Intenta de nuevo.");
-                    resetCamera();
-                }
+                const optimizedBase64 = await resizeImage(event.target.result, 800);
+                
+                const textToSend = chatInputText.value.trim();
+                chatInputText.value = '';
+                
+                await sendToGemini(textToSend || "¿Me puedes ayudar con esta carta?", optimizedBase64);
+                ocrUpload.value = '';
             };
             reader.readAsDataURL(file);
         });
     }
 
-    function resetCamera() {
-        if(cameraForm) { cameraForm.classList.remove('state-active'); cameraForm.classList.add('state-hidden'); }
-        if(cameraLoading) { cameraLoading.classList.remove('state-active'); cameraLoading.classList.add('state-hidden'); }
-        if(cameraInitial) { cameraInitial.classList.remove('state-hidden'); cameraInitial.classList.add('state-active'); }
-        if(ocrUpload) ocrUpload.value = "";
-        const chatContainer = document.getElementById('chat-messages-container');
-        if(chatContainer) chatContainer.innerHTML = "";
-        currentBase64 = "";
+    if (btnChatSend && chatInputText) {
+        const handleSend = async () => {
+            const text = chatInputText.value.trim();
+            if (!text) return;
+            chatInputText.value = '';
+            await sendToGemini(text, null);
+        };
+        handleTap(btnChatSend, handleSend);
+        chatInputText.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
     }
-
-    handleTap(btnCancelScan, resetCamera);
+    }
 
     function resizeImage(base64Str, maxWidth = 800) {
         return new Promise((resolve) => {
@@ -621,7 +596,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.6)); // Reducido a 60% para mayor velocidad
+                resolve(canvas.toDataURL('image/jpeg', 0.6));
             };
             img.onerror = () => resolve(base64Str);
         });
@@ -638,46 +613,6 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const { data: { publicUrl } } = supabase.storage.from('card-images').getPublicUrl(fileName);
         return publicUrl;
-    }
-    
-    async function saveCardToCloud(category, extraData = {}, keepChatOpen = false) {
-        try {
-            if(!keepChatOpen) {
-                if(cameraForm) { cameraForm.classList.remove('state-active'); cameraForm.classList.add('state-hidden'); }
-                if(cameraLoading) { cameraLoading.classList.remove('state-hidden'); cameraLoading.classList.add('state-active'); }
-                const loadingText = document.querySelector('#camera-loading .loading-text');
-                if(loadingText) loadingText.innerText = "Subiendo carta a la nube...";
-            }
-
-            let publicUrl = currentBase64; 
-            try {
-                publicUrl = await uploadImageToSupabase(currentBase64);
-            } catch (err) {
-                console.warn("Usando imagen local por restricción de Storage:", err);
-            }
-
-            const newRecord = {
-                category: category,
-                name: "Carta",
-                rarity: "Normal",
-                summary: "",
-                image: publicUrl,
-                ...extraData
-            };
-
-            if (supabase) {
-                await supabase.from('cards').insert([newRecord]);
-                await loadData();
-            } else {
-                throw new Error("Supabase no está inicializado.");
-            }
-
-            if(!keepChatOpen) resetCamera();
-        } catch (err) {
-            console.error("Error al guardar:", err);
-            alert("Hubo un error al subir la carta. Comprueba tu conexión.");
-            if(!keepChatOpen) resetCamera();
-        }
     }
 
     // --- TABS DEL PERFIL ---

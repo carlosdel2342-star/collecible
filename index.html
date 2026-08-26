@@ -154,43 +154,29 @@
             <button class="fab-button" id="btn-fab-trade"><i class="fa-solid fa-handshake"></i></button>
         </div>
 
-        <!-- Vista: Camera -->
+        <!-- Vista: Asistente IA -->
         <div id="view-camera" class="view">
             <header class="view-header">
-                <h1>Scanner</h1>
+                <h1>Asistente IA</h1>
             </header>
             <div class="view-body transparent-body camera-container">
-                <!-- UI Inicial -->
-                <div id="camera-initial" class="camera-center state-active">
-                    <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
-                    <button id="btn-scan-trigger" class="btn-scan-main">
-                        <i class="fa-solid fa-camera"></i> Escanear Nueva Carta
-                    </button>
-                </div>
-                
-                <!-- Estado de Carga -->
-                <div id="camera-loading" class="camera-center state-hidden">
-                    <div class="scanner-spinner"></div>
-                    <p class="loading-text">Analizando legitimidad y metadatos con IA...</p>
-                </div>
-
-                <!-- Formulario de Revisión (Chat UI) -->
-                <div id="camera-form" class="chat-ui-container state-hidden">
-                    <div class="chat-header-img">
-                        <img id="scanned-thumb" src="" alt="Carta Escaneada">
-                    </div>
-                    
+                <div id="camera-form" class="chat-ui-container state-active">
                     <div class="chat-messages" id="chat-messages-container">
-                        <!-- Mensajes inyectados dinámicamente -->
+                        <div class="message-bot">
+                            <h3>Collecible AI 🤖</h3>
+                            <p>¡Hola! Soy tu tasador experto. Escríbeme o envíame la foto de una carta para que te ayude a identificarla y valorarla.</p>
+                        </div>
+                    </div>
+
+                    <div id="chat-upload-progress" style="display: none; padding: 5px 15px; font-size: 0.8rem; color: var(--accent-color);">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Analizando...
                     </div>
 
                     <div class="chat-input-area">
-                        <input type="text" id="chat-input-text" placeholder="El Asistente está procesando..." class="chat-input" disabled>
-                        <button id="btn-chat-send" class="btn-chat-send" disabled><i class="fa-solid fa-paper-plane"></i></button>
-                    </div>
-                    
-                    <div style="text-align: center; margin: 10px;">
-                        <button id="btn-cancel-scan" class="btn-cancel">Descartar y Volver</button>
+                        <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
+                        <button id="btn-attach-image" class="btn-attach"><i class="fa-solid fa-camera"></i></button>
+                        <input type="text" id="chat-input-text" placeholder="Escribe un mensaje..." class="chat-input">
+                        <button id="btn-chat-send" class="btn-chat-send"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
                 </div>
             </div>
