@@ -450,6 +450,13 @@ document.addEventListener("DOMContentLoaded", () => {
     let aiChatHistory = [];
     let currentBase64 = "";
     
+    try {
+        const savedHistory = localStorage.getItem('aiChatHistory');
+        if (savedHistory) {
+            aiChatHistory = JSON.parse(savedHistory);
+        }
+    } catch (e) { console.warn("Error cargando historial de chat", e); }
+    
     // 🚨 PON TU CLAVE DE GEMINI AQUÍ ABAJO 🚨
     const GEMINI_API_KEY = 'AQ.Ab8RN6Lb0bdZsydMaS3j8zkWxyfWDDFBvyPyHn9X8ngWIJHepw';
 
@@ -477,6 +484,39 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
         chatMessagesContainer.innerHTML += msgHtml;
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     }
+
+    function saveChatHistory() {
+        try {
+            localStorage.setItem('aiChatHistory', JSON.stringify(aiChatHistory));
+        } catch(e) {
+            console.warn("Límite de memoria local alcanzado para el chat.", e);
+        }
+    }
+
+    function renderChatHistory() {
+        if (!chatMessagesContainer) return;
+        if (aiChatHistory.length > 0) {
+            chatMessagesContainer.innerHTML = '';
+            aiChatHistory.forEach(msg => {
+                if (msg.role === 'user') {
+                    let text = "";
+                    let img = null;
+                    msg.parts.forEach(p => {
+                        if (p.text) text = p.text;
+                        if (p.inline_data) img = `data:${p.inline_data.mime_type};base64,${p.inline_data.data}`;
+                    });
+                    appendMessage('user', text, img);
+                } else if (msg.role === 'model') {
+                    let text = msg.parts[0]?.text || "✅ Ejecutado";
+                    const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                    appendMessage('model', formattedText);
+                }
+            });
+        }
+    }
+
+    // Renderizar historial al cargar
+    renderChatHistory();
 
     async function sendToGemini(text, base64Str = null) {
         if (!text && !base64Str) return;
@@ -509,7 +549,21 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
         try {
             const payload = {
                 system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-                contents: aiChatHistory
+                contents: aiChatHistory,
+                tools: [{
+                    function_declarations: [{
+                        name: "guardar_en_portfolio",
+                        description: "Guarda la última carta de la que estamos hablando en el portafolio del usuario. Úsalo SOLO si el usuario te pide explícitamente guardar la carta, foto o añadirla a su colección.",
+                        parameters: {
+                            type: "OBJECT",
+                            properties: {
+                                nombre: { type: "STRING", description: "El nombre de la carta identificada" },
+                                precioEstimado: { type: "STRING", description: "Precio estimado en dólares" }
+                            },
+                            required: ["nombre"]
+                        }
+                    }]
+                }]
             };
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`, {
@@ -521,13 +575,60 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
             if (!response.ok) throw new Error('Error en API Gemini');
             const data = await response.json();
             
-            let modelText = data.candidates[0].content.parts[0].text;
+            const parts = data.candidates[0].content.parts;
+            let modelText = "";
+            let functionCall = null;
             
-            // Reemplazar markdown simple de negritas y saltos de línea para HTML
-            const formattedText = modelText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            parts.forEach(part => {
+                if (part.text) modelText += part.text;
+                if (part.functionCall) functionCall = part.functionCall;
+            });
             
-            appendMessage('model', formattedText);
-            aiChatHistory.push({ role: 'model', parts: [{ text: modelText }] });
+            if (functionCall && functionCall.name === 'guardar_en_portfolio') {
+                if (chatUploadProgress) {
+                    chatUploadProgress.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardando carta en el servidor...';
+                    chatUploadProgress.style.display = 'block';
+                }
+                
+                let lastImageBase64 = null;
+                for (let i = aiChatHistory.length - 1; i >= 0; i--) {
+                    if (aiChatHistory[i].role === 'user') {
+                        const inlineData = aiChatHistory[i].parts.find(p => p.inline_data);
+                        if (inlineData) {
+                            lastImageBase64 = `data:${inlineData.inline_data.mime_type};base64,${inlineData.inline_data.data}`;
+                            break;
+                        }
+                    }
+                }
+
+                if (lastImageBase64 && supabase) {
+                    let publicUrl = lastImageBase64;
+                    try { publicUrl = await uploadImageToSupabase(lastImageBase64); } catch(e) {}
+                    
+                    await supabase.from('cards').insert([{
+                        category: 'profile',
+                        name: functionCall.args.nombre || 'Desconocido',
+                        rarity: 'Normal',
+                        summary: 'Guardado desde Asistente IA',
+                        image: publicUrl
+                    }]);
+                    
+                    const successMsg = `¡Listo! He guardado **${functionCall.args.nombre || 'tu carta'}** en tu portafolio exitosamente. ✅`;
+                    appendMessage('model', successMsg);
+                    aiChatHistory.push({ role: 'model', parts: [{ text: successMsg }] });
+                    await loadData();
+                } else {
+                    const failMsg = "No encuentro ninguna foto reciente en el chat para guardar, o no estoy conectado.";
+                    appendMessage('model', failMsg);
+                    aiChatHistory.push({ role: 'model', parts: [{ text: failMsg }] });
+                }
+            } else if (modelText) {
+                const formattedText = modelText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                appendMessage('model', formattedText);
+                aiChatHistory.push({ role: 'model', parts: [{ text: modelText }] });
+            }
+            
+            saveChatHistory();
 
         } catch (error) {
             console.error("Gemini Error:", error);
@@ -576,6 +677,24 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
         handleTap(btnChatSend, handleSend);
         chatInputText.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSend();
+        });
+    }
+
+    const btnClearChat = document.getElementById('btn-clear-chat');
+    if (btnClearChat) {
+        handleTap(btnClearChat, () => {
+            if(confirm("¿Seguro que quieres limpiar todo el historial del chat?")) {
+                aiChatHistory = [];
+                localStorage.removeItem('aiChatHistory');
+                if (chatMessagesContainer) {
+                    chatMessagesContainer.innerHTML = `
+                        <div class="message-bot">
+                            <h3>Collecible AI 🤖</h3>
+                            <p>¡Hola! Soy tu tasador experto. Escríbeme o envíame la foto de una carta para que te ayude a identificarla y valorarla.</p>
+                        </div>
+                    `;
+                }
+            }
         });
     }
 

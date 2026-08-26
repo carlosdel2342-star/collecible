@@ -156,8 +156,9 @@
 
         <!-- Vista: Asistente IA -->
         <div id="view-camera" class="view">
-            <header class="view-header">
+            <header class="view-header" style="display: flex; justify-content: space-between; align-items: center; padding-right: 15px;">
                 <h1>Asistente IA</h1>
+                <button id="btn-clear-chat" style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-trash-can"></i></button>
             </header>
             <div class="view-body transparent-body camera-container">
                 <div id="camera-form" class="chat-ui-container state-active">
@@ -174,7 +175,7 @@
 
                     <div class="chat-input-area">
                         <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
-                        <button id="btn-attach-image" class="btn-attach"><i class="fa-solid fa-camera"></i></button>
+                        <button id="btn-attach-image" class="btn-attach" title="Subir carta para tasar"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                         <input type="text" id="chat-input-text" placeholder="Escribe un mensaje..." class="chat-input">
                         <button id="btn-chat-send" class="btn-chat-send"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
