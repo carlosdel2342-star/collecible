@@ -602,21 +602,32 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
                 }
 
                 if (lastImageBase64 && supabase) {
-                    let publicUrl = lastImageBase64;
-                    try { publicUrl = await uploadImageToSupabase(lastImageBase64); } catch(e) {}
+                    let publicUrl = null;
+                    try { 
+                        publicUrl = await uploadImageToSupabase(lastImageBase64); 
+                    } catch(e) {
+                        console.error("Error al subir a storage:", e);
+                    }
                     
-                    await supabase.from('cards').insert([{
-                        category: 'profile',
-                        name: functionCall.args.nombre || 'Desconocido',
-                        rarity: 'Normal',
-                        summary: 'Guardado desde Asistente IA',
-                        image: publicUrl
-                    }]);
-                    
-                    const successMsg = `¡Listo! He guardado **${functionCall.args.nombre || 'tu carta'}** en tu portafolio exitosamente. ✅`;
-                    appendMessage('model', successMsg);
-                    aiChatHistory.push({ role: 'model', parts: [{ text: successMsg }] });
-                    await loadData();
+                    if (publicUrl) {
+                        const { error: insertError } = await supabase.from('cards').insert([{
+                            category: 'profile',
+                            name: functionCall.args.nombre || 'Desconocido',
+                            rarity: 'Normal',
+                            summary: 'Guardado desde Asistente IA',
+                            image: publicUrl
+                        }]);
+                        if (insertError) console.error("Error guardando en cards:", insertError);
+                        
+                        const successMsg = `¡Listo! He guardado **${functionCall.args.nombre || 'tu carta'}** en tu portafolio exitosamente. ✅`;
+                        appendMessage('model', successMsg);
+                        aiChatHistory.push({ role: 'model', parts: [{ text: successMsg }] });
+                        await loadData();
+                    } else {
+                        const failMsg = "Ocurrió un error guardando la foto. Asegúrate de estar conectado y con permisos.";
+                        appendMessage('model', failMsg);
+                        aiChatHistory.push({ role: 'model', parts: [{ text: failMsg }] });
+                    }
                 } else {
                     const failMsg = "No encuentro ninguna foto reciente en el chat para guardar, o no estoy conectado.";
                     appendMessage('model', failMsg);
@@ -723,13 +734,33 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
         });
     }
 
+    function base64ToBlob(base64, mime) {
+        const byteCharacters = atob(base64.split(',')[1]);
+        const byteArrays = [];
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512);
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+        }
+        return new Blob(byteArrays, { type: mime });
+    }
+
     async function uploadImageToSupabase(base64Str) {
         if (!supabase) throw new Error("Supabase no disponible");
-        const res = await fetch(base64Str);
-        const blob = await res.blob();
+        const mimeMatch = base64Str.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const blob = base64ToBlob(base64Str, mimeType);
         const fileName = `card_${Date.now()}.jpg`;
         
-        const { error } = await supabase.storage.from('card-images').upload(fileName, blob);
+        const { error } = await supabase.storage.from('card-images').upload(fileName, blob, {
+            contentType: mimeType,
+            cacheControl: '3600',
+            upsert: false
+        });
         if (error) throw error;
         
         const { data: { publicUrl } } = supabase.storage.from('card-images').getPublicUrl(fileName);
