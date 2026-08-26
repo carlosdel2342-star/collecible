@@ -575,7 +575,6 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
             if (e.key === 'Enter') handleSend();
         });
     }
-    }
 
     function resizeImage(base64Str, maxWidth = 800) {
         return new Promise((resolve) => {
