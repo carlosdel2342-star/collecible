@@ -499,7 +499,10 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
         appendMessage('user', text, base64Str);
         aiChatHistory.push({ role: 'user', parts: userParts });
 
-        if (chatUploadProgress) chatUploadProgress.style.display = 'block';
+        if (chatUploadProgress) {
+            chatUploadProgress.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> IA Pensando... 🧠';
+            chatUploadProgress.style.display = 'block';
+        }
         if (chatInputText) chatInputText.disabled = true;
         if (btnChatSend) btnChatSend.disabled = true;
 
@@ -509,7 +512,7 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
                 contents: aiChatHistory
             };
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -551,7 +554,7 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
             
             const reader = new FileReader();
             reader.onload = async function(event) {
-                const optimizedBase64 = await resizeImage(event.target.result, 800);
+                const optimizedBase64 = await resizeImage(event.target.result, 512);
                 
                 const textToSend = chatInputText.value.trim();
                 chatInputText.value = '';
