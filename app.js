@@ -754,7 +754,11 @@ Responde de manera concisa y usa formato markdown si es necesario.`;
         const mimeMatch = base64Str.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,/);
         const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
         const blob = base64ToBlob(base64Str, mimeType);
-        const fileName = `card_${Date.now()}.jpg`;
+        
+        let fileName = `card_${Date.now()}.jpg`;
+        if (typeof currentUser !== 'undefined' && currentUser && currentUser.id) {
+            fileName = `${currentUser.id}/${fileName}`;
+        }
         
         const { error } = await supabase.storage.from('card-images').upload(fileName, blob, {
             contentType: mimeType,
